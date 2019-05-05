@@ -5,7 +5,7 @@ socket services using HTTP protocol.
 
 ------------------------------------------
 
-***NOTE!*** This is a draft of how this application works; it is not yet functional.
+***NOTE!*** This is a draft of how this application works; it is not yet fully functional.
 
 ------------------------------------------
 
