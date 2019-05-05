@@ -1,0 +1,38 @@
+{
+  "name": "@norjs/portal-service",
+  "version": "1.0.9",
+  "description": "NorJS Portal Service for other microservices",
+  "main": "./src/index.js",
+  "bin": {
+    "nor-portal-service": "./src/bin/portal-service.js"
+  },
+  "scripts": {
+    "start": "node ./src/bin/portal-service.js",
+    "test": "mocha test/**/*.spec.js",
+    "test-watch": "mocha --watch-extensions js --watch test/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norjs/portal-service.git"
+  },
+  "keywords": [
+    "proxy",
+    "proxy-service",
+    "unix-socket"
+  ],
+  "author": "Jaakko Heusala <jheusala@iki.fi>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/norjs/portal-service/issues"
+  },
+  "homepage": "https://github.com/norjs/portal-service#readme",
+  "dependencies": {
+    "@norjs/socket": "^1.0.8",
+    "@norjs/utils": "^1.0.8",
+    "lodash": "^4.17.11"
+  },
+  "devDependencies": {
+    "mocha": "^6.0.2",
+    "sinon": "^7.3.1"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "auth": {
+    "default": {
+      "path": "./examples/MyAuthenticator.js",
+      "config": "./examples/auth.json"
+    }
+  },
+  "services": {
+    "event": {
+      "path": "/path/to/event-service.socket",
+      "auth": "default"
+    },
+    "database": {
+      "path": "/path/to/database-service.socket",
+      "auth": "default"
+    }
+  },
+  "routes": {
+    "/event": "event",
+    "/database": "database"
+  }
+}
