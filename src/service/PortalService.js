@@ -86,6 +86,7 @@ class PortalService {
      * @return {Promise}
      */
     onRequest (req, res) {
+
         console.log(`[${PortalService.getTimeForLog()}] Request "${req.method} ${req.url}" started`);
 
         /**
@@ -115,7 +116,17 @@ class PortalService {
         );
 
         if (!routePath) {
-            throw new TypeError(`No route found for "${url}"`);
+            //throw new TypeError(`No route found for "${url}"`);
+            return new Promise( (resolve, reject) => {
+                try {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({"error": "Not found", "url": routePath, "code": 404}));
+                    resolve();
+                } catch(err) {
+                    reject(err);
+                }
+            });
         }
 
         if (!_.has(this._routes, routePath)) {
