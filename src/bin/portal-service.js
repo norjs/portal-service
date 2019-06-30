@@ -44,6 +44,8 @@ const PATH = require('path');
 
 LogicUtils.tryCatch( () => {
 
+    const NOR_PORTAL_SERVICE_PATH = process.env.NOR_PORTAL_SERVICE_PATH;
+
     const NOR_PORTAL_CONFIG = process.env.NOR_PORTAL_CONFIG;
 
     const NOR_PORTAL_PORT = parseInteger(process.env.NOR_PORTAL_PORT);
@@ -91,19 +93,21 @@ LogicUtils.tryCatch( () => {
              */
             const serviceConfig = config.services[key];
 
+            const serviceConfigPath = NOR_PORTAL_SERVICE_PATH ? PATH.resolve(NOR_PORTAL_SERVICE_PATH, serviceConfig.path) : serviceConfig.path;
+
             /**
              *
              * @type {SocketHttpClient}
              */
             const client = new SocketHttpClient({
-                socket: serviceConfig.path,
+                socket: serviceConfigPath,
                 httpModule: HTTP,
                 queryStringModule
             });
 
             services[key] = {
                 name: key,
-                path: serviceConfig.path,
+                path: serviceConfigPath,
                 auth: serviceConfig.auth,
                 client
             };
