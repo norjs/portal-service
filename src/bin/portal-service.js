@@ -108,6 +108,8 @@ LogicUtils.tryCatch( () => {
              */
             const routeConfig = config.routes[key];
 
+
+
             /**
              *
              * @type {SocketHttpClient}
@@ -118,12 +120,34 @@ LogicUtils.tryCatch( () => {
                 queryStringModule
             });
 
-            routes[key] = {
+            const routeOptions = {
                 path: key,
                 socket: routeConfig.socket,
+                targetHost,
+                targetPort,
                 auth: routeConfig.auth,
                 client
             };
+
+            if (routeConfig.socket && routeConfig.target) {
+                throw new TypeError(`You may not have both 'route.socket' and 'route.target' properties specified!`);
+            }
+
+            if (routeConfig.socket) {
+                routeOptions.socket = routeConfig.socket;
+            } else if ( HttpUtils.isSocket(routeOptions.target) ) {
+                routeOptions.socket = HttpUtils.getSocket(routeOptions.target);
+            } else if ( HttpUtils.isPort(routeOptions.target) ) {
+                routeOptions.targetHost = "localhost";
+                routeOptions.targetPort = HttpUtils.getPort(routeOptions.target);
+            } else if ( HttpUtils.isHostPort(routeOptions.target) ) {
+                routeOptions.targetHost = HttpUtils.getHost(routeOptions.target);
+                routeOptions.targetPort = HttpUtils.getPort(routeOptions.target);
+            } else {
+                throw new TypeError(`No proxy target detected.`);
+            }
+
+            routes[key] = routeOptions;
 
         });
     }

@@ -239,6 +239,16 @@ class PortalService {
          */
         const socketPath = routeConfig.socket;
 
+        /**
+         * @type {string}
+         */
+        const targetHost = routeConfig.targetHost;
+
+        /**
+         * @type {number}
+         */
+        const targetPort = routeConfig.targetPort;
+
         // noinspection JSUnresolvedVariable
         /**
          * @type {string}
@@ -251,57 +261,71 @@ class PortalService {
         let path = origUrl.substr(routePath.length);
         if (!path) path = '/';
 
+        console.log(LogUtils.getLine(`Calling request "${method} ${path}" from "${socketPath}"...`));
+
+        let options = {
+            method,
+            path
+        };
+
+        if (socketPath) {
+            options.socketPath = socketPath;
+        } else if ( targetHost && targetPort ) {
+            options.host = targetHost;
+            options.port = targetPort;
+        } else if ( targetPort ) {
+            options.host = "localhost";
+            options.port = targetPort;
+        } else {
+            throw new TypeError(`No proxy target specified`);
+        }
+
         return new Promise((resolve, reject) => {
             LogicUtils.tryCatch( () => {
-
-                console.log(`Calling request "${method} ${path}" from "${socketPath}"...`);
 
                 /**
                  *
                  * @type {HttpClientRequestObject}
                  */
-                const clientReq = this._http.request({
-                    method,
-                    path,
-                    socketPath
-                }, (clientRes) => {
+                const clientReq = this._http.request(options, (clientRes) => {
                     LogicUtils.tryCatch( () => {
 
-                        console.log('Got response. Parsing.');
+                        console.log(LogUtils.getLine('Got response. Parsing.'));
 
+                        /**
+                         * @type {number}
+                         */
                         const statusCode = clientRes.statusCode;
+
+                        /**
+                         *
+                         * @type {boolean}
+                         */
                         const isSuccess = statusCode >= 200 && statusCode < 400;
+
                         res.statusCode = statusCode;
 
-                        clientRes.on('data', (chunk) => {
-                            LogicUtils.tryCatch( () => res.write(chunk, 'utf8'), reject);
-                        });
+                        resolve(HttpUtils.proxyDataTo(clientRes, res).then(() => {
 
-                        clientRes.on('end', () => {
-                            LogicUtils.tryCatch( () => {
-                                console.log(`Response ended.`);
-                                res.end();
-                                if (isSuccess) {
-                                    resolve();
-                                } else {
-                                    reject(`Status was "${statusCode}"`);
-                                }
-                            }, reject);
-                        });
+                            console.log(LogUtils.getLine(`Response ended.`));
+
+                            res.end();
+
+                            if (!isSuccess) {
+                                throw new HttpUtils.HttpError(statusCode);
+                            }
+
+                        }));
 
                     }, reject);
                 });
 
                 clientReq.on('error', reject);
 
-                req.on('data', (chunk) => {
-                    LogicUtils.tryCatch( () => clientReq.write(chunk, 'utf8'), reject);
-                });
-
-                req.on('end', () => {
-                    LogicUtils.tryCatch( () => {
-                        clientReq.end();
-                    }, reject);
+                HttpUtils.proxyDataTo(req, clientReq).then(() => {
+                    clientReq.end();
+                }).catch( err => {
+                    reject(err);
                 });
 
             }, reject);
