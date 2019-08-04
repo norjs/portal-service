@@ -37,8 +37,8 @@ class PortalService {
 
     /**
      *
-     * @param authenticators {Object.<string, NorPortalAuthObject>}
-     * @param routes {Object.<string, NorPortalRouteObject>}
+     * @param authenticators {Object.<string,NorPortalAuthObject>}
+     * @param routes {Object.<string,NorPortalRouteObject>}
      * @param httpModule {HttpModule}
      */
     constructor ({

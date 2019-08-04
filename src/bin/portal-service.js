@@ -82,7 +82,7 @@ LogicUtils.tryCatch( () => {
     // noinspection JSValidateTypes
     /**
      *
-     * @type {NorPortalConfigurationObject}
+     * @type {NorConfigurationObject}
      */
     const config = ProcessUtils.requireFile(NOR_PORTAL_CONFIG);
     TypeUtils.assert(config, "NorConfigurationObject");
@@ -98,7 +98,8 @@ LogicUtils.tryCatch( () => {
      *
      * @type {Object.<string,NorPortalRouteObject>}
      */
-    const routes = {};
+    let routes = {};
+
     if (config.routes && _.keys(config.routes).length) {
         _.forEach(_.keys(config.routes), key => {
 
@@ -107,8 +108,6 @@ LogicUtils.tryCatch( () => {
              * @type {NorConfigurationRouteObject}
              */
             const routeConfig = config.routes[key];
-
-
 
             /**
              *
@@ -122,9 +121,6 @@ LogicUtils.tryCatch( () => {
 
             const routeOptions = {
                 path: key,
-                socket: routeConfig.socket,
-                targetHost,
-                targetPort,
                 auth: routeConfig.auth,
                 client
             };
@@ -155,42 +151,62 @@ LogicUtils.tryCatch( () => {
     /**
      * Authenticators by their name
      *
-     * @type {Object.<string, NorPortalAuthObject>}
+     * @type {Object.<string,NorPortalAuthObject>}
      */
-    const authenticators = {};
-    if (config.auth && _.keys(config.auth).length) {
-        _.forEach(_.keys(config.auth), key => {
+    let authenticators = {};
 
+    if (config.auth && _.keys(config.auth).length) {
+        _.forEach(
+            _.keys(config.auth),
             /**
              *
-             * @type {NorConfigurationAuthObject}
+             * @param key {string}
              */
-            const authConfig = config.auth[key];
+            key => {
 
-            let configObject = {};
-            if (_.has(authConfig, 'config')) {
-                if (_.isObject(authConfig.config)) {
-                    configObject = _.cloneDeep(authConfig.config);
-                } else if (_.isString(authConfig.config)) {
-                    configObject = ProcessUtils.requireFile(authConfig.config);
-                } else {
-                    throw new TypeError(`Unknown type of config: "${authConfig.config}"`)
+                /**
+                 *
+                 * @type {NorConfigurationAuthObject}
+                 */
+                const authConfig = config.auth[key];
+
+                /**
+                 *
+                 * @type {Object}
+                 */
+                let configObject = {};
+                if (_.has(authConfig, 'config')) {
+                    if (_.isObject(authConfig.config)) {
+                        configObject = _.cloneDeep(authConfig.config);
+                    } else if (_.isString(authConfig.config)) {
+                        configObject = ProcessUtils.requireFile(authConfig.config);
+                    } else {
+                        throw new TypeError(`Unknown type of config: "${authConfig.config}"`)
+                    }
                 }
+
+                /**
+                 *
+                 * @type {typeof NorPortalAuthenticator}
+                 */
+                const AuthenticatorClass = ProcessUtils.requireFile(authConfig.path);
+
+                /**
+                 *
+                 * @type {NorPortalAuthenticator}
+                 */
+                const authenticator = new AuthenticatorClass(configObject);
+                TypeUtils.assert(authenticator, "NorPortalAuthenticator");
+
+                authenticators[key] = {
+                    name: key,
+                    path: authConfig.path,
+                    config: configObject,
+                    authenticator
+                };
+
             }
-
-            const AuthenticatorClass = ProcessUtils.requireFile(authConfig.path);
-
-            const authenticator = new AuthenticatorClass(configObject);
-            TypeUtils.assert(authenticator, "NorPortalAuthenticator");
-
-            authenticators[key] = {
-                name: key,
-                path: authConfig.path,
-                config: configObject,
-                authenticator
-            };
-
-        });
+        );
     }
 
     /**
@@ -198,8 +214,8 @@ LogicUtils.tryCatch( () => {
      * @type {PortalService}
      */
     const service = new PortalService({
-        authenticators,
-        routes,
+        routes: routes,
+        authenticators: authenticators,
         httpModule: HTTP
     });
 
