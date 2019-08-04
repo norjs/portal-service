@@ -57,6 +57,12 @@ require('../interfaces/NorPortalAuthenticator.js');
 require('../types/NorPortalContextObject.js');
 require('../types/NorPortalRouteObject.js');
 
+/**
+ *
+ * @type {FileSystemModule}
+ */
+const FS = require('fs');
+
 LogicUtils.tryCatch( () => {
 
     // noinspection JSUnresolvedVariable
@@ -64,7 +70,7 @@ LogicUtils.tryCatch( () => {
      *
      * @type {string}
      */
-    const NOR_PORTAL_CONFIG = process.env.NOR_PORTAL_CONFIG || './nor.json';
+    const NOR_PORTAL_CONFIG = process.env.NOR_PORTAL_CONFIG || ( FS.existsSync('./nor.js') ? './nor.js' : undefined ) || './nor.json';
 
     // noinspection JSUnresolvedVariable
     /**
@@ -110,20 +116,9 @@ LogicUtils.tryCatch( () => {
              */
             const routeConfig = config.routes[key];
 
-            /**
-             *
-             * @type {SocketHttpClient}
-             */
-            const client = new SocketHttpClient({
-                socket: routeConfig.socket,
-                httpModule: HTTP,
-                queryStringModule
-            });
-
-            const routeOptions = {
+            let routeOptions = {
                 path: key,
-                auth: routeConfig.auth,
-                client
+                auth: routeConfig.auth
             };
 
             if (routeConfig.socket && routeConfig.target) {
@@ -132,17 +127,25 @@ LogicUtils.tryCatch( () => {
 
             if (routeConfig.socket) {
                 routeOptions.socket = routeConfig.socket;
-            } else if ( HttpUtils.isSocket(routeOptions.target) ) {
-                routeOptions.socket = HttpUtils.getSocket(routeOptions.target);
-            } else if ( HttpUtils.isPort(routeOptions.target) ) {
+            } else if ( HttpUtils.isSocket(routeConfig.target) ) {
+                routeOptions.socket = HttpUtils.getSocket(routeConfig.target);
+            } else if ( HttpUtils.isPort(routeConfig.target) ) {
                 routeOptions.targetHost = "localhost";
-                routeOptions.targetPort = HttpUtils.getPort(routeOptions.target);
-            } else if ( HttpUtils.isHostPort(routeOptions.target) ) {
-                routeOptions.targetHost = HttpUtils.getHost(routeOptions.target);
-                routeOptions.targetPort = HttpUtils.getPort(routeOptions.target);
+                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
+            } else if ( HttpUtils.isHostPort(routeConfig.target) ) {
+                routeOptions.targetHost = HttpUtils.getHost(routeConfig.target);
+                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
             } else {
-                throw new TypeError(`No proxy target detected.`);
+                throw new TypeError(`No proxy target detected for "${key}"`);
             }
+
+            // if (routeConfig.socket) {
+            //     routeOptions.client = new SocketHttpClient({
+            //         socket: routeConfig.socket,
+            //         httpModule: HTTP,
+            //         queryStringModule
+            //     });
+            // }
 
             routes[key] = routeOptions;
 
