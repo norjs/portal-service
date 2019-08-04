@@ -1,5 +1,5 @@
 // Types and interfaces
-require('../types.js');
+require('../types/NorPortalContextObject.js');
 
 /**
  *
