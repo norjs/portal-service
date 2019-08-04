@@ -14,45 +14,59 @@ const LogicUtils = require('@norjs/utils/Logic');
 
 /**
  *
+ * @type {typeof LogUtils}
+ */
+const LogUtils = require('@norjs/utils/Log');
+
+/**
+ *
+ * @type {typeof PromiseUtils}
+ */
+const PromiseUtils = require('@norjs/utils/Promise');
+
+/**
+ *
+ * @type {typeof HttpUtils}
+ */
+const HttpUtils = require('@norjs/utils/Http');
+
+/**
+ *
  */
 class PortalService {
 
     /**
      *
-     * @param services {Object.<string,NorPortalConfigurationService>}
-     * @param authenticators {Object.<string, NorPortalConfigurationAuth>}
-     * @param routes {Object.<string, string>}
+     * @param authenticators {Object.<string, NorPortalAuthObject>}
+     * @param routes {Object.<string, NorPortalRouteObject>}
      * @param httpModule {HttpModule}
      */
     constructor ({
-        services,
-        authenticators,
-        routes,
+        routes = {},
+        authenticators = {},
         httpModule
     }) {
 
+        /**
+         *
+         * @member {HttpModule}
+         * @private
+         */
         this._http = httpModule;
 
         /**
          *
-         * @member {Object.<string,NorPortalConfigurationService>}
-         * @private
-         */
-        this._services = services;
-
-        /**
-         *
-         * @member {Object.<string, NorPortalConfigurationAuth>}
-         * @private
-         */
-        this._authenticators = authenticators;
-
-        /**
-         *
-         * @member {Object.<string, string>}
+         * @member {Object.<string, NorPortalRouteObject>}
          * @private
          */
         this._routes = routes;
+
+        /**
+         *
+         * @member {Object.<string, NorPortalAuthObject>}
+         * @private
+         */
+        this._authenticators = authenticators;
 
         /**
          *
@@ -72,11 +86,19 @@ class PortalService {
     }
 
     /**
+     * Called after all the parts of the service are initialized.
      *
-     * @param port {number}
+     */
+    onInit () {
+    }
+
+    // noinspection JSMethodCanBeStatic
+    /**
+     *
+     * @param port {string}
      */
     onListen (port) {
-        console.log(`[${PortalService.getTimeForLog()}] ${PortalService.getAppName()} running at ${port}`);
+        console.log(LogUtils.getLine(`${PortalService.getAppName()} running at ${port}`));
     }
 
     /**
@@ -87,7 +109,18 @@ class PortalService {
      */
     onRequest (req, res) {
 
-        console.log(`[${PortalService.getTimeForLog()}] Request "${req.method} ${req.url}" started`);
+        /**
+         * @type {string}
+         */
+        const origUrl = req.url;
+
+        // noinspection JSUnresolvedVariable
+        /**
+         * @type {string}
+         */
+        const method = req.method;
+
+        console.log(LogUtils.getLine(`Request "${method} ${origUrl}" started`));
 
         /**
          *
@@ -104,7 +137,7 @@ class PortalService {
         /**
          * @type {string}
          */
-        const url = _.replace(`${req.url}/`, /\/+$/, "/");
+        const url = _.replace(`${origUrl}/`, /\/+$/, "/");
 
         /**
          *
@@ -116,47 +149,23 @@ class PortalService {
         );
 
         if (!routePath) {
-            //throw new TypeError(`No route found for "${url}"`);
-            return new Promise( (resolve, reject) => {
-                try {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({"error": "Not found", "url": routePath, "code": 404}));
-                    resolve();
-                } catch(err) {
-                    reject(err);
-                }
-            });
-        }
-
-        if (!_.has(this._routes, routePath)) {
-            throw new TypeError(`No route configured for "${routePath}"`);
+            throw new HttpUtils.HttpError(404, `Not Found: "${url}"`);
         }
 
         /**
          *
-         * @type {string}
+         * @type {NorPortalRouteObject}
          */
-        const targetService = this._routes[routePath];
-
-        if (!_.has(this._services, targetService)) {
-            throw new Error(`No service configured for "${targetService}"`)
-        }
-
-        /**
-         *
-         * @type {NorPortalConfigurationService}
-         */
-        const serviceConfig = this._services[targetService];
+        const routeConfig = this._routes[routePath];
 
         /**
          *
          * @type {string|undefined}
          */
-        const authName = serviceConfig.auth;
+        const authName = routeConfig.auth;
 
         /**
-         * @type {NorPortalConfigurationAuth|undefined}
+         * @type {NorPortalAuthObject|undefined}
          */
         let authConfig = undefined;
 
@@ -177,27 +186,27 @@ class PortalService {
         const requestContext = {
             username,
             password,
-            method: req.method,
-            url: req.url,
-            target: targetService
+            method: method,
+            url: origUrl
         };
 
         if (authConfig && authConfig.authenticator) {
-            return PortalService._promiseWhen(authConfig.authenticator.hasAccess(requestContext)).then(
+            return PromiseUtils.when(authConfig.authenticator.hasAccess(requestContext)).then(
                 /**
                  *
                  * @param result {boolean}
                  */
                 result => {
+
                     if (result !== true) {
-                        throw new Error(`Access denied to "${url}"`);
+                        throw new HttpUtils.HttpError(403, `Access denied to "${url}"`);
                     }
 
-                    return this._proxyRequestTo(req, res, requestContext, serviceConfig, routePath);
+                    return this._proxyRequestTo(req, res, requestContext, routeConfig);
                 }
             );
         } else {
-            return this._proxyRequestTo(req, res, requestContext, serviceConfig, routePath);
+            return this._proxyRequestTo(req, res, requestContext, routeConfig);
         }
 
     }
@@ -207,20 +216,39 @@ class PortalService {
      * @param req {HttpRequestObject}
      * @param res {HttpResponseObject}
      * @param requestContext {NorPortalContextObject}
-     * @param serviceConfig {NorPortalConfigurationService}
-     * @param routePath {string}
+     * @param routeConfig {NorPortalRouteObject}
      * @returns {Promise}
      * @private
      */
-    _proxyRequestTo (req, res, requestContext, serviceConfig, routePath) {
+    _proxyRequestTo (req, res, requestContext, routeConfig) {
 
-        console.log('REQUEST-URL: ', req.url);
-        console.log('ROUTE-PATH: ', routePath);
+        /**
+         * @type {string}
+         */
+        const origUrl = req.url;
+        console.log('REQUEST-URL: ', origUrl);
 
+        /**
+         * @type {string}
+         */
+        const routePath = routeConfig.path;
+        console.log('ROUTE-PATH: ', routeConfig.path);
+
+        /**
+         * @type {string}
+         */
+        const socketPath = routeConfig.socket;
+
+        // noinspection JSUnresolvedVariable
+        /**
+         * @type {string}
+         */
         const method = req.method;
-        let path = req.url.substr(routePath.length);
-        const socketPath = serviceConfig.path;
 
+        /**
+         * @type {string}
+         */
+        let path = origUrl.substr(routePath.length);
         if (!path) path = '/';
 
         return new Promise((resolve, reject) => {
@@ -280,45 +308,12 @@ class PortalService {
         });
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Close the server
      */
     destroy () {
-        console.log(`[${PortalService.getTimeForLog()}] ${PortalService.getAppName()} destroyed`);
-    }
-
-    /**
-     *
-     * @param err {*}
-     */
-    static handleError (err) {
-        console.error('Exception: ' + err);
-        if (err.stack) {
-            console.error(err.stack);
-        }
-        process.exit(1);
-    }
-
-    /**
-     *
-     * @returns {string}
-     */
-    static getTimeForLog () {
-        return (new Date()).toISOString();
-    }
-
-    /**
-     *
-     * @param value {Promise|*}
-     * @returns {Promise}
-     * @private
-     */
-    static _promiseWhen (value) {
-        if (value && value.then) {
-            return value;
-        }
-
-        return new Promise(resolve => resolve(value));
+        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
     }
 
 }

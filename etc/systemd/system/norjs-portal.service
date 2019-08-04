@@ -1,0 +1,14 @@
+[Unit]
+Description=nor-portal-service - NorJS Portal Service
+After=network.target
+
+[Service]
+RuntimeDirectory=nor-portal-service
+RuntimeDirectoryMode=0750
+Environment=NODE_LISTEN=/run/nor-portal-service/service.socket
+Type=simple
+ExecStart=/usr/local/bin/nor-portal-service
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

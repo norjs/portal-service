@@ -1,19 +1,11 @@
 # portal-service
 
-This is a micro service acting as a authorizing gateway between network and local UNIX 
-socket services using HTTP protocol.
+This is a micro service acting as an authorizing gateway between network and local UNIX 
+socket services.
 
-------------------------------------------
+### Configuration File
 
-***NOTE!*** This is a draft of how this application works; it is not yet fully functional.
-
-------------------------------------------
-
-### Usage 
-
-------------------------------------------
-
-#### Configuration file `./my-config.json`
+A configuration file `./nor.json` could look like:
 
 ```json
 {
@@ -23,28 +15,22 @@ socket services using HTTP protocol.
       "config": "./auth.json"
     }
   },
-  "services": {
-    "event": {
-      "path": "/path/to/event-service.socket",
+  "routes": {
+    "/event": {
+      "socket": "./event.sock",
       "auth": "default"
     },
-    "database": {
-      "path": "/path/to/database-service.socket",
-      "auth": "default"
+    "/database": {
+      "socket": "./database.sock",
+      "auth": "default"      
     }
-  },
-  "routes": {
-    "/event": "event",
-    "/database": "database"
   }
 }
 ```
 
-------------------------------------------
+### Authentication
 
-#### Implement an authenticator in a file named `./MyAuthenticator.js`
-
-***Note!*** This is just a simplified example.
+Implement an authenticator in a file named `./MyAuthenticator.js`:
 
 ```js
 /**
@@ -70,14 +56,26 @@ class MyAuthenticator {
 module.exports = MyAuthenticator;
 ```
 
-------------------------------------------
+***Note!*** This is just a simplified example.
 
-#### Start the service
+### Start the service
+
+Start in a TCP port `localhost:3000`:
 
 ```
-NOR_PORTAL_CONFIG='./my-config.json' \
-NOR_PORTAL_PORT='3000' \
-npm start
+NODE_LISTEN='3000' nor-portal-service
 ```
 
-------------------------------------------
+Start in a socket file:
+
+```
+NODE_LISTEN='./portal.sock' nor-portal-service
+```
+
+The configuration will be readed from `./nor.json` by default. You may change it:
+
+```
+NOR_PORTAL_CONFIG='./portal/nor.json' \
+NODE_LISTEN='./portal.sock' \
+nor-portal-service
+```

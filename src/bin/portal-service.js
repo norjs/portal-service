@@ -15,6 +15,24 @@ const LogicUtils = require('@norjs/utils/Logic');
 
 /**
  *
+ * @type {typeof HttpUtils}
+ */
+const HttpUtils = require('@norjs/utils/Http');
+
+/**
+ *
+ * @type {typeof StringUtils}
+ */
+const StringUtils = require('@norjs/utils/String');
+
+/**
+ *
+ * @type {typeof ProcessUtils}
+ */
+const ProcessUtils = require('@norjs/utils/Process');
+
+/**
+ *
  * @type {typeof PortalService}
  */
 const PortalService = require('../service/PortalService.js');
@@ -32,31 +50,42 @@ const SocketHttpClient = require('@norjs/socket/src/SocketHttpClient.js');
 const queryStringModule = require('querystring');
 
 // Types and interfaces
+require('@norjs/types/NorConfigurationObject.js');
 require('@norjs/socket/src/interfaces/HttpClient.js');
 require('../interfaces/NorPortalAuthenticator.js');
-require('../types.js');
-
-/**
- *
- * @type {PathModule}
- */
-const PATH = require('path');
+require('../types/NorPortalContextObject.js');
+require('../types/NorPortalRouteObject.js');
 
 LogicUtils.tryCatch( () => {
 
-    const NOR_PORTAL_SERVICE_PATH = process.env.NOR_PORTAL_SERVICE_PATH;
+    // noinspection JSUnresolvedVariable
+    /**
+     *
+     * @type {string}
+     */
+    const NOR_PORTAL_CONFIG = process.env.NOR_PORTAL_CONFIG || './nor.json';
 
-    const NOR_PORTAL_CONFIG = process.env.NOR_PORTAL_CONFIG;
+    // noinspection JSUnresolvedVariable
+    /**
+     *
+     * @type {number|undefined}
+     */
+    const NOR_PORTAL_PORT = StringUtils.parseInteger(process.env.NOR_PORTAL_PORT);
 
-    const NOR_PORTAL_PORT = parseInteger(process.env.NOR_PORTAL_PORT);
+    // noinspection JSUnresolvedVariable
+    /**
+     *
+     * @type {string}
+     */
+    const NODE_LISTEN = process.env.NODE_LISTEN || (NOR_PORTAL_PORT ? `localhost:${NOR_PORTAL_PORT}` : undefined) || './socket.sock';
 
     // noinspection JSValidateTypes
     /**
      *
      * @type {NorPortalConfigurationObject}
      */
-    const config = requireFile(NOR_PORTAL_CONFIG);
-    TypeUtils.assert(config, "NorPortalConfigurationObject");
+    const config = ProcessUtils.requireFile(NOR_PORTAL_CONFIG);
+    TypeUtils.assert(config, "NorConfigurationObject");
 
     /**
      *
@@ -65,75 +94,44 @@ LogicUtils.tryCatch( () => {
     const HTTP = require('http');
 
     /**
-     * @typedef {Object} NorPortalConfigurationService
-     * @property {string} name - The service name
-     * @property {string} path - Path to UNIX socket file hosting a local HTTP service
-     * @property {string} [auth] - The authenticator name to use. If not specified, no authenticator will be used.
-     * @property {HttpClient} client - The HTTP client
-     */
-    TypeUtils.defineType("NorPortalConfigurationService", {
-        "name": "string",
-        "path": "string",
-        "auth": "string|undefined",
-        "client": "HttpClient"
-    });
-
-    /**
-     * Services by their name
+     * Routes by their name
      *
-     * @type {Object.<string,NorPortalConfigurationService>}
+     * @type {Object.<string,NorPortalRouteObject>}
      */
-    const services = {};
-    if (config.services && _.keys(config.services).length) {
-        _.forEach(_.keys(config.services), key => {
+    const routes = {};
+    if (config.routes && _.keys(config.routes).length) {
+        _.forEach(_.keys(config.routes), key => {
 
             /**
              *
-             * @type {NorPortalConfigurationServiceObject}
+             * @type {NorConfigurationRouteObject}
              */
-            const serviceConfig = config.services[key];
-
-            const serviceConfigPath = NOR_PORTAL_SERVICE_PATH ? PATH.resolve(NOR_PORTAL_SERVICE_PATH, serviceConfig.path) : serviceConfig.path;
+            const routeConfig = config.routes[key];
 
             /**
              *
              * @type {SocketHttpClient}
              */
             const client = new SocketHttpClient({
-                socket: serviceConfigPath,
+                socket: routeConfig.socket,
                 httpModule: HTTP,
                 queryStringModule
             });
 
-            services[key] = {
-                name: key,
-                path: serviceConfigPath,
-                auth: serviceConfig.auth,
+            routes[key] = {
+                path: key,
+                socket: routeConfig.socket,
+                auth: routeConfig.auth,
                 client
             };
 
         });
     }
 
-
-    /**
-     * @typedef {Object} NorPortalConfigurationAuth
-     * @property {string} name - The auth name
-     * @property {string} path - Path to the authenticator file which can be require()'d
-     * @property {Object} config - Configuration for authenticator
-     * @property {NorPortalAuthenticator} authenticator - The authenticator implementation
-     */
-    TypeUtils.defineType("NorPortalConfigurationAuth", {
-        "name": "string",
-        "path": "string",
-        "config": "Object",
-        "authenticator": "NorPortalAuthenticator"
-    });
-
     /**
      * Authenticators by their name
      *
-     * @type {Object.<string, NorPortalConfigurationAuth>}
+     * @type {Object.<string, NorPortalAuthObject>}
      */
     const authenticators = {};
     if (config.auth && _.keys(config.auth).length) {
@@ -141,7 +139,7 @@ LogicUtils.tryCatch( () => {
 
             /**
              *
-             * @type {NorPortalConfigurationAuthObject}
+             * @type {NorConfigurationAuthObject}
              */
             const authConfig = config.auth[key];
 
@@ -150,13 +148,13 @@ LogicUtils.tryCatch( () => {
                 if (_.isObject(authConfig.config)) {
                     configObject = _.cloneDeep(authConfig.config);
                 } else if (_.isString(authConfig.config)) {
-                    configObject = requireFile(authConfig.config);
+                    configObject = ProcessUtils.requireFile(authConfig.config);
                 } else {
                     throw new TypeError(`Unknown type of config: "${authConfig.config}"`)
                 }
             }
 
-            const AuthenticatorClass = requireFile(authConfig.path);
+            const AuthenticatorClass = ProcessUtils.requireFile(authConfig.path);
 
             const authenticator = new AuthenticatorClass(configObject);
             TypeUtils.assert(authenticator, "NorPortalAuthenticator");
@@ -176,89 +174,31 @@ LogicUtils.tryCatch( () => {
      * @type {PortalService}
      */
     const service = new PortalService({
-        services,
         authenticators,
-        routes: config.routes,
+        routes,
         httpModule: HTTP
     });
 
-    // noinspection JSCheckFunctionSignatures
-    const server = HTTP.createServer(
-        (req, res) => {
-
-            const result = LogicUtils.tryCatch(
-                () => service.onRequest(req, res),
-                err => {
-
-                    if (err && err.stack) {
-                        console.log('Error: ' + err.stack);
-                    } else {
-                        console.log('Error: ' + err);
-                    }
-
-                    if (!res.headersSent) {
-                        res.setHeader('Content-Type', 'application/json');
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end('{"error": "Exception", "code": 500}');
-                    } else {
-                        res.end();
-                    }
-
-                }
-            );
-
-            if (result && result.catch) {
-                result.catch(err => {
-                    console.error('Error: ', err);
-                });
-            }
-
-        }
+    // Create server
+    const server = HttpUtils.createJsonServer(
+        HTTP,
+        (req, res) => service.onRequest(req, res)
     );
 
-    server.listen(NOR_PORTAL_PORT, () => {
-        service.onListen(NOR_PORTAL_PORT);
+    // Start listening
+    HttpUtils.listen(server, NODE_LISTEN, () => {
+        LogicUtils.tryCatch( () => service.onListen(HttpUtils.getLabel(NODE_LISTEN)), err => ProcessUtils.handleError(err) );
     });
 
-    let destroyed = false;
-    const closeServer = () => LogicUtils.tryCatch(
-        () => {
-            if (destroyed) return;
-            destroyed = true;
+    // Setup automatic destroy on when process ends
+    ProcessUtils.setupDestroy(() => {
 
-            service.destroy();
+        LogicUtils.tryCatch( () => service.destroy(), err => ProcessUtils.handleError(err) );
 
-            server.close();
-        },
-        err => {
-            console.error('Exception: ' + err)
-        }
-    );
+        LogicUtils.tryCatch( () => server.close(), err => ProcessUtils.handleError(err) );
 
-    process.on('exit', closeServer);
-    process.on('SIGTERM', closeServer);
-    process.on('SIGINT', closeServer);
-    process.on('SIGUSR1', closeServer);
-    process.on('SIGUSR2', closeServer);
-    process.on('uncaughtException', closeServer);
+    });
 
-}, err => PortalService.handleError(err) );
+    service.onInit();
 
-/**
- *
- * @param value {string|undefined}
- * @returns {number|undefined}
- */
-function parseInteger (value) {
-    if (value === undefined) return undefined;
-    return parseInt(value, 10);
-}
-
-/**
- *
- * @param name {string}
- * @return {any}
- */
-function requireFile (name) {
-    return require(PATH.resolve(process.cwd(), name));
-}
+}, err => ProcessUtils.handleError(err) );
