@@ -3,6 +3,8 @@
 This is a micro service acting as an authorizing gateway between network and local UNIX 
 socket services.
 
+See also [@norjs/manager-service](https://github.com/norjs/manager-service) which can use the same configuration file and manages service start & stop.
+
 ### Configuration File
 
 A configuration file `./nor.json` could look like:
