@@ -40,19 +40,13 @@ const PortalService = require('../service/PortalService.js');
 
 /**
  *
- * @type {typeof SocketHttpClient}
- */
-const SocketHttpClient = require('@norjs/socket/src/SocketHttpClient.js');
-
-/**
- *
  * @type {QueryStringModule}
  */
 const queryStringModule = require('querystring');
 
 // Types and interfaces
 require('@norjs/types/NorConfigurationObject.js');
-require('@norjs/socket/src/interfaces/HttpClient.js');
+require('@norjs/types/interfaces/HttpClient.js');
 require('../interfaces/NorPortalAuthenticator.js');
 require('../types/NorPortalContextObject.js');
 require('../types/NorPortalRouteObject.js');

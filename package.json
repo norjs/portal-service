@@ -27,7 +27,6 @@
   },
   "homepage": "https://github.com/norjs/portal-service#readme",
   "dependencies": {
-    "@norjs/socket": "^1.0.10",
     "@norjs/types": "^1.0.14",
     "@norjs/utils": "^1.0.14",
     "lodash": "^4.17.15"

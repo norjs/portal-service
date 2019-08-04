@@ -145,7 +145,7 @@ class PortalService {
          */
         let routePath = _.find(
             _.keys(this._routes),
-            routePath => _.startsWith( url, `${routePath}/`)
+            routePath => _.startsWith( url, `${ _.trimEnd(routePath, '/') }/`)
         );
 
         if (!routePath) {
@@ -226,13 +226,13 @@ class PortalService {
          * @type {string}
          */
         const origUrl = req.url;
-        console.log('REQUEST-URL: ', origUrl);
+        console.log(LogUtils.getLine(`REQUEST-URL: "${origUrl}"`));
 
         /**
          * @type {string}
          */
-        const routePath = routeConfig.path;
-        console.log('ROUTE-PATH: ', routeConfig.path);
+        const routePath = _.trimEnd(routeConfig.path, '/');
+        console.log(LogUtils.getLine(`ROUTE-PATH: "${routeConfig.path}"`));
 
         /**
          * @type {string}
@@ -261,8 +261,6 @@ class PortalService {
         let path = origUrl.substr(routePath.length);
         if (!path) path = '/';
 
-        console.log(LogUtils.getLine(`Calling request "${method} ${path}" from "${socketPath}"...`));
-
         let options = {
             method,
             path
@@ -279,6 +277,14 @@ class PortalService {
         } else {
             throw new TypeError(`No proxy target specified`);
         }
+
+        /**
+         *
+         * @type {string}
+         */
+        const targetLabel = options.socketPath ? `socket://${options.socketPath}` : `http://${options.host}:${options.port}`;
+
+        console.log(LogUtils.getLine(`Calling request "${method} ${path}" from "${targetLabel}"...`));
 
         return new Promise((resolve, reject) => {
             LogicUtils.tryCatch( () => {
