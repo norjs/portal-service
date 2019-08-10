@@ -1,4 +1,4 @@
-# portal-service
+# @norjs/portal-service
 
 This is a micro service acting as a HTTP gateway between services.
 
