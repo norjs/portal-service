@@ -25,7 +25,10 @@ A configuration file `./nor.json` could look like:
     },
     "/database": {
       "socket": "./database.sock",
-      "auth": "default"      
+      "auth": "default"
+    },
+    "/public": {
+      "target": "http://public.example.com/"
     }
   }
 }
