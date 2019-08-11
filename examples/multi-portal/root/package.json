@@ -1,7 +1,7 @@
 {
-  "name": "@norjs/example-portal-a",
+  "name": "@norjs/example-portal-b",
   "version": "1.0.0",
-  "description": "Example db configuration for @norjs/portal-service",
+  "description": "Example configuration for portal service",
   "main": "index.js",
   "scripts": {
     "start": "nor-manager-service",
@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@norjs/database-service": "^1.0.10",
     "@norjs/portal-service": "^1.0.10",
     "@norjs/manager-service": "^1.0.10"
   }
