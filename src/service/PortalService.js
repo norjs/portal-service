@@ -32,6 +32,18 @@ const HttpUtils = require('@norjs/utils/Http');
 
 /**
  *
+ * @type {typeof PortalRequestOptions}
+ */
+const PortalRequestOptions = require('./PortalRequestOptions.js');
+
+/**
+ *
+ * @type {typeof HttpPortalRequest}
+ */
+const HttpPortalRequest = require('./HttpPortalRequest.js');
+
+/**
+ *
  */
 class PortalService {
 
@@ -39,7 +51,7 @@ class PortalService {
      *
      * @param authenticators {Object.<string,NorPortalAuthObject>}
      * @param routes {Object.<string,NorPortalRouteObject>}
-     * @param httpModule {HttpModule}
+     * @param httpModule {HttpClientModule}
      */
     constructor ({
         routes = {},
@@ -49,7 +61,7 @@ class PortalService {
 
         /**
          *
-         * @member {HttpModule}
+         * @member {HttpClientModule}
          * @private
          */
         this._http = httpModule;
@@ -222,17 +234,54 @@ class PortalService {
      */
     _proxyRequestTo (req, res, requestContext, routeConfig) {
 
-        /**
-         * @type {string}
-         */
-        const origUrl = req.url;
-        console.log(LogUtils.getLine(`REQUEST-URL: "${origUrl}"`));
+        const options = PortalService.parsePortalRequestOptions({
+            method: req.method,
+            url: req.url,
+            routeConfig: routeConfig
+        });
+
+        const request = new HttpPortalRequest({
+            http: this._http,
+            request: req,
+            response: res,
+            options
+        });
+
+        return request.run();
+
+    }
+
+    // noinspection JSMethodCanBeStatic
+    /**
+     * Close the server
+     */
+    destroy () {
+        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
+    }
+
+    /**
+     *
+     * @param url {string}
+     * @param method {string}
+     * @param routeConfig {NorPortalRouteObject}
+     * @returns {PortalRequestOptions}
+     */
+    static parsePortalRequestOptions ({
+        url,
+        method,
+        routeConfig
+    }) {
 
         /**
          * @type {string}
          */
         const routePath = _.trimEnd(routeConfig.path, '/');
-        console.log(LogUtils.getLine(`ROUTE-PATH: "${routeConfig.path}"`));
+
+        /**
+         * @type {string}
+         */
+        let path = url.substr(routePath.length);
+        if (!path) path = '/';
 
         /**
          * @type {string}
@@ -249,101 +298,25 @@ class PortalService {
          */
         const targetPort = routeConfig.targetPort;
 
-        // noinspection JSUnresolvedVariable
-        /**
-         * @type {string}
-         */
-        const method = req.method;
-
-        /**
-         * @type {string}
-         */
-        let path = origUrl.substr(routePath.length);
-        if (!path) path = '/';
-
-        let options = {
+        let options = new PortalRequestOptions({
             method,
             path
-        };
+        });
 
         if (socketPath) {
-            options.socketPath = socketPath;
+            options.setSocketPath(socketPath);
         } else if ( targetHost && targetPort ) {
-            options.host = targetHost;
-            options.port = targetPort;
+            options.setHost(targetHost);
+            options.setPort(targetPort);
         } else if ( targetPort ) {
-            options.host = "localhost";
-            options.port = targetPort;
+            options.setHost("localhost");
+            options.setPort(targetPort);
         } else {
             throw new TypeError(`No proxy target specified`);
         }
 
-        /**
-         *
-         * @type {string}
-         */
-        const targetLabel = options.socketPath ? `socket://${options.socketPath}` : `http://${options.host}:${options.port}`;
+        return options;
 
-        console.log(LogUtils.getLine(`Calling request "${method} ${path}" from "${targetLabel}"...`));
-
-        return new Promise((resolve, reject) => {
-            LogicUtils.tryCatch( () => {
-
-                /**
-                 *
-                 * @type {HttpClientRequestObject}
-                 */
-                const clientReq = this._http.request(options, (clientRes) => {
-                    LogicUtils.tryCatch( () => {
-
-                        console.log(LogUtils.getLine('Got response. Parsing.'));
-
-                        /**
-                         * @type {number}
-                         */
-                        const statusCode = clientRes.statusCode;
-
-                        /**
-                         *
-                         * @type {boolean}
-                         */
-                        const isSuccess = statusCode >= 200 && statusCode < 400;
-
-                        res.statusCode = statusCode;
-
-                        resolve(HttpUtils.proxyDataTo(clientRes, res).then(() => {
-
-                            console.log(LogUtils.getLine(`Response ended.`));
-
-                            res.end();
-
-                            if (!isSuccess) {
-                                throw new HttpUtils.HttpError(statusCode);
-                            }
-
-                        }));
-
-                    }, reject);
-                });
-
-                clientReq.on('error', reject);
-
-                HttpUtils.proxyDataTo(req, clientReq).then(() => {
-                    clientReq.end();
-                }).catch( err => {
-                    reject(err);
-                });
-
-            }, reject);
-        });
-    }
-
-    // noinspection JSMethodCanBeStatic
-    /**
-     * Close the server
-     */
-    destroy () {
-        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
     }
 
 }
