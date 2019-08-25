@@ -38,18 +38,14 @@ const ProcessUtils = require('@norjs/utils/Process');
  */
 const PortalService = require('../service/PortalService.js');
 
-/**
- *
- * @type {QueryStringModule}
- */
-const queryStringModule = require('querystring');
-
 // Types and interfaces
 require('@norjs/types/NorConfigurationObject.js');
 require('@norjs/types/interfaces/HttpClient.js');
 require('../interfaces/NorPortalAuthenticator.js');
 require('../types/NorPortalContextObject.js');
 require('../types/NorPortalRouteObject.js');
+
+const NorPortalRouteType = require("../types/NorPortalRouteType");
 
 /**
  *
@@ -110,36 +106,40 @@ LogicUtils.tryCatch( () => {
              */
             const routeConfig = config.routes[key];
 
+            /**
+             *
+             * @type {NorPortalRouteObject}
+             */
             let routeOptions = {
                 path: key,
-                auth: routeConfig.auth
+                auth: routeConfig.auth,
+                targetPath: "/"
             };
 
             if (routeConfig.socket && routeConfig.target) {
                 throw new TypeError(`You may not have both 'route.socket' and 'route.target' properties specified!`);
             }
 
-            if (routeConfig.socket) {
+            if ( HttpUtils.isProto(routeConfig.target, "portal") ) {
+                routeOptions.type = NorPortalRouteType.PORTAL;
+                routeOptions.portal = HttpUtils.getProtoValue(routeConfig.target, "portal");
+            } else if (routeConfig.socket) {
+                routeOptions.type = NorPortalRouteType.SOCKET;
                 routeOptions.socket = routeConfig.socket;
             } else if ( HttpUtils.isSocket(routeConfig.target) ) {
+                routeOptions.type = NorPortalRouteType.SOCKET;
                 routeOptions.socket = HttpUtils.getSocket(routeConfig.target);
             } else if ( HttpUtils.isPort(routeConfig.target) ) {
+                routeOptions.type = NorPortalRouteType.HTTP;
                 routeOptions.targetHost = "localhost";
                 routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
             } else if ( HttpUtils.isHostPort(routeConfig.target) ) {
+                routeOptions.type = NorPortalRouteType.HTTP;
                 routeOptions.targetHost = HttpUtils.getHost(routeConfig.target);
                 routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
             } else {
                 throw new TypeError(`No proxy target detected for "${key}"`);
             }
-
-            // if (routeConfig.socket) {
-            //     routeOptions.client = new SocketHttpClient({
-            //         socket: routeConfig.socket,
-            //         httpModule: HTTP,
-            //         queryStringModule
-            //     });
-            // }
 
             routes[key] = routeOptions;
 

@@ -41,6 +41,7 @@ const PortalRequestOptions = require('./PortalRequestOptions.js');
  * @type {typeof HttpPortalRequest}
  */
 const HttpPortalRequest = require('./HttpPortalRequest.js');
+const NorPortalRouteType = require("../types/NorPortalRouteType");
 
 /**
  *
@@ -88,21 +89,21 @@ class PortalService {
 
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
-     *
-     * @returns {string}
-     * @abstract
+     * Close the server
      */
-    static getAppName () {
-        return '@norjs/portal-service';
+    destroy () {
+
+        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
+
     }
 
     /**
      * Called after all the parts of the service are initialized.
      *
      */
-    onInit () {
-    }
+    onInit () {}
 
     // noinspection JSMethodCanBeStatic
     /**
@@ -137,12 +138,14 @@ class PortalService {
         /**
          *
          * @type {string|undefined}
+         * @fixme implement support
          */
         let username = undefined;
 
         /**
          *
          * @type {string|undefined}
+         * @fixme implement support
          */
         let password = undefined;
 
@@ -153,28 +156,91 @@ class PortalService {
 
         /**
          *
+         * @type {NorPortalRouteObject}
+         */
+        const routeConfig = this._findRouteConfig(url);
+
+        if (!routeConfig) {
+            throw new HttpUtils.HttpError(404, `Not Found: "${url}"`);
+        }
+
+        /**
+         * @type {NorPortalAuthObject|undefined}
+         */
+        let authConfig = this._getAuthConfig(routeConfig.auth);
+
+        /**
+         *
+         * @type {NorPortalContextObject}
+         */
+        const requestContext = {
+            username,
+            password,
+            method: method,
+            url: origUrl
+        };
+
+        if (authConfig && authConfig.authenticator) {
+
+            return PromiseUtils.when(authConfig.authenticator.hasAccess(requestContext)).then(
+                /**
+                 *
+                 * @param result {boolean}
+                 */
+                result => {
+
+                    if (result !== true) {
+                        throw new HttpUtils.HttpError(403, `Access denied to "${origUrl}"`);
+                    }
+
+                    return this._proxyRequestTo(req, res, requestContext, routeConfig);
+                }
+            );
+
+        } else {
+
+            return this._proxyRequestTo(req, res, requestContext, routeConfig);
+
+        }
+
+    }
+
+    /**
+     *
+     * @param url {string}
+     * @returns {NorPortalRouteObject|undefined}
+     * @private
+     */
+    _findRouteConfig (url) {
+
+        /**
+         *
          * @type {string|undefined}
          */
-        let routePath = _.find(
+        const routePath = _.find(
             _.keys(this._routes),
             routePath => _.startsWith( url, `${ _.trimEnd(routePath, '/') }/`)
         );
 
         if (!routePath) {
-            throw new HttpUtils.HttpError(404, `Not Found: "${url}"`);
+            return undefined;
         }
 
         /**
          *
          * @type {NorPortalRouteObject}
          */
-        const routeConfig = this._routes[routePath];
+        return this._routes[routePath];
 
-        /**
-         *
-         * @type {string|undefined}
-         */
-        const authName = routeConfig.auth;
+    }
+
+    /**
+     *
+     * @param authName {string}
+     * @return {NorPortalAuthObject}
+     * @private
+     */
+    _getAuthConfig (authName) {
 
         /**
          * @type {NorPortalAuthObject|undefined}
@@ -191,35 +257,7 @@ class PortalService {
 
         }
 
-        /**
-         *
-         * @type {NorPortalContextObject}
-         */
-        const requestContext = {
-            username,
-            password,
-            method: method,
-            url: origUrl
-        };
-
-        if (authConfig && authConfig.authenticator) {
-            return PromiseUtils.when(authConfig.authenticator.hasAccess(requestContext)).then(
-                /**
-                 *
-                 * @param result {boolean}
-                 */
-                result => {
-
-                    if (result !== true) {
-                        throw new HttpUtils.HttpError(403, `Access denied to "${url}"`);
-                    }
-
-                    return this._proxyRequestTo(req, res, requestContext, routeConfig);
-                }
-            );
-        } else {
-            return this._proxyRequestTo(req, res, requestContext, routeConfig);
-        }
+        return authConfig;
 
     }
 
@@ -242,21 +280,11 @@ class PortalService {
 
         const request = new HttpPortalRequest({
             http: this._http,
-            request: req,
-            response: res,
             options
         });
 
-        return request.run();
+        return request.run(req, res);
 
-    }
-
-    // noinspection JSMethodCanBeStatic
-    /**
-     * Close the server
-     */
-    destroy () {
-        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
     }
 
     /**
@@ -283,40 +311,61 @@ class PortalService {
         let path = url.substr(routePath.length);
         if (!path) path = '/';
 
-        /**
-         * @type {string}
-         */
-        const socketPath = routeConfig.socket;
-
-        /**
-         * @type {string}
-         */
-        const targetHost = routeConfig.targetHost;
-
-        /**
-         * @type {number}
-         */
-        const targetPort = routeConfig.targetPort;
-
         let options = new PortalRequestOptions({
             method,
             path
         });
 
-        if (socketPath) {
-            options.setSocketPath(socketPath);
-        } else if ( targetHost && targetPort ) {
-            options.setHost(targetHost);
-            options.setPort(targetPort);
-        } else if ( targetPort ) {
-            options.setHost("localhost");
-            options.setPort(targetPort);
-        } else {
-            throw new TypeError(`No proxy target specified`);
+        switch (routeConfig.type) {
+
+            case NorPortalRouteType.PTTH:
+                options.setPtth(true);
+                break;
+
+            case NorPortalRouteType.SOCKET:
+                options.setSocketPath(routeConfig.socket);
+                break;
+
+            case NorPortalRouteType.HTTP: {
+
+                /**
+                 * @type {string}
+                 */
+                const targetHost = routeConfig.targetHost;
+
+                /**
+                 * @type {number}
+                 */
+                const targetPort = routeConfig.targetPort;
+
+                if ( targetHost && targetPort ) {
+                    options.setHost(targetHost);
+                    options.setPort(targetPort);
+                } else if ( targetPort ) {
+                    options.setHost("localhost");
+                    options.setPort(targetPort);
+                }
+
+            }
+            break;
+
+            default:
+
+                throw new TypeError(`Unsupported route type: "${routeConfig.type}"`);
+
         }
 
         return options;
 
+    }
+
+    /**
+     *
+     * @returns {string}
+     * @abstract
+     */
+    static getAppName () {
+        return '@norjs/portal-service';
     }
 
 }

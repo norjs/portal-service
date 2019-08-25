@@ -14,14 +14,9 @@ module.exports = {
       }
     }
   },
-  "portals": {
-    "db": {
-      "connect": "http://localhost:3000"
-    }
-  },
   "routes": {
-    "/api": {
-      "target": "portal://db/api"
+    "/db": {
+      "type": "ptth"
     }
   }
 };

@@ -30,25 +30,9 @@ class PortalRequest {
 
     /**
      *
-     * @param request {HttpRequestObject}
-     * @param response {HttpResponseObject}
      * @param options {PortalRequestOptions}
      */
-    constructor ({request, response, options}) {
-
-        /**
-         *
-         * @member {HttpRequestObject}
-         * @protected
-         */
-        this._request = request;
-
-        /**
-         *
-         * @member {HttpResponseObject}
-         * @protected
-         */
-        this._response = response;
+    constructor ({options}) {
 
         /**
          *
@@ -56,6 +40,20 @@ class PortalRequest {
          * @protected
          */
         this._options = options;
+
+    }
+
+    /**
+     *
+     * @param request {HttpRequestObject}
+     * @param response {HttpResponseObject}
+     * @returns {Promise}
+     */
+    run (request, response) {
+
+        console.log(LogUtils.getLine(`Calling request "${this._options.method} ${this._options.path}" from "${this._options}"...`));
+
+        return this._run(this._options, request, response);
 
     }
 
@@ -75,10 +73,11 @@ class PortalRequest {
     /**
      *
      * @param clientRes {HttpClientResponseObject}
+     * @param response {HttpResponseObject}
      * @returns {Promise}
      * @protected
      */
-    _handleResponse (clientRes) {
+    _handleResponse (clientRes, response) {
 
         console.log(LogUtils.getLine('Got response. Parsing.'));
 
@@ -93,11 +92,11 @@ class PortalRequest {
          */
         const isSuccess = statusCode >= 200 && statusCode < 400;
 
-        this._response.statusCode = statusCode;
+        response.statusCode = statusCode;
 
-        return HttpUtils.proxyDataTo(clientRes, this._response).then(() => {
+        return HttpUtils.proxyDataTo(clientRes, response).then(() => {
 
-            this._response.end();
+            response.end();
 
             console.log(LogUtils.getLine(`Response ended.`));
 
@@ -111,11 +110,13 @@ class PortalRequest {
 
     /**
      *
+     * @param request {HttpRequestObject}
+     * @param response {HttpResponseObject}
      * @param options {PortalRequestOptions}
      * @returns {Promise}
      * @protected
      */
-    _run (options) {
+    _run (options, request, response) {
 
         return new Promise((resolve, reject) => {
             LogicUtils.tryCatch( () => {
@@ -126,13 +127,13 @@ class PortalRequest {
                  */
                 const clientReq = this._startRequest(options, (clientRes) => {
                     LogicUtils.tryCatch( () => {
-                        resolve(this._handleResponse(clientRes));
+                        resolve(this._handleResponse(clientRes, response));
                     }, reject);
                 });
 
                 clientReq.on('error', reject);
 
-                HttpUtils.proxyDataTo(this._request, clientReq).then(() => {
+                HttpUtils.proxyDataTo(request, clientReq).then(() => {
                     clientReq.end();
                 }).catch( err => {
                     reject(err);
@@ -140,18 +141,6 @@ class PortalRequest {
 
             }, reject);
         });
-
-    }
-
-    /**
-     *
-     * @returns {Promise}
-     */
-    run () {
-
-        console.log(LogUtils.getLine(`Calling request "${this._options.method} ${this._options.path}" from "${this._options}"...`));
-
-        return this._run(this._options);
 
     }
 

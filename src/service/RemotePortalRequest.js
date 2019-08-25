@@ -14,16 +14,18 @@ const PortalRequest = require("./PortalRequest.js");
 /**
  *
  */
-class HttpPortalRequest extends PortalRequest {
+class RemotePortalRequest extends PortalRequest {
 
     /**
      *
      * @param http {HttpClientModule}
+     * @param request {HttpRequestObject}
+     * @param response {HttpResponseObject}
      * @param options {PortalRequestOptions}
      */
-    constructor ({http, options}) {
+    constructor ({http, request, response, options}) {
 
-        super({options});
+        super({request, response, options});
 
         /**
          * @member {HttpClientModule}
@@ -48,4 +50,4 @@ class HttpPortalRequest extends PortalRequest {
 }
 
 // Exports
-module.exports = HttpPortalRequest;
+module.exports = RemotePortalRequest;

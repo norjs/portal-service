@@ -1,5 +1,6 @@
 
 /**
+ * This is the object which will be provided to the NodeJS HTTP request function.
  */
 class PortalRequestOptions {
 
@@ -44,6 +45,13 @@ class PortalRequestOptions {
          * @protected
          */
         this._host = undefined;
+
+        /**
+         *
+         * @member {boolean}
+         * @private
+         */
+        this._ptth = false;
 
     }
 
@@ -109,6 +117,22 @@ class PortalRequestOptions {
      */
     setHost (value) {
         this._host = value;
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    isPtth () {
+        return this._ptth;
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    setPtth (value) {
+        return this._ptth = !!value;
     }
 
     /**
