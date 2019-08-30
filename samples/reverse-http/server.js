@@ -1,4 +1,12 @@
+/**
+ * This is a sample HTTP server which listens for remote connection upgrade requests and upgrades the incoming connection
+ * as a HTTP client which can then make requests on the remote HTTP server running at the client side.
+ */
 
+/**
+ *
+ * @type {string | number}
+ */
 const PORT = process.env.PORT || 8080;
 
 const http = require('http');

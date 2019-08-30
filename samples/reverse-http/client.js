@@ -1,4 +1,12 @@
+/**
+ * This is a sample HTTP client which connect to a remote server and upgrades the connection as a HTTP server, so then
+ * the remote server turns into a HTTP client and can make requests on the client side HTTP server.
+ */
 
+/**
+ *
+ * @type {string | string}
+ */
 const HOSTNAME = process.env.HOSTNAME || '127.0.0.1';
 
 const PORT = process.env.PORT || 8080;
