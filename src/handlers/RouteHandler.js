@@ -13,9 +13,9 @@ const LogicUtils = require("@norjs/utils/src/LogicUtils");
 
 /**
  *
- * @type {typeof PortalRequestOptions}
+ * @type {typeof RouteHandlerOptions}
  */
-const PortalRequestOptions = require('./PortalRequestOptions.js');
+const RouteHandlerOptions = require('./RouteHandlerOptions.js');
 
 /**
  *
@@ -26,41 +26,46 @@ const HttpUtils = require("@norjs/utils/src/HttpUtils");
 /**
  * @abstract
  */
-class PortalRequest {
+class RouteHandler {
 
     /**
      *
-     * @param options {PortalRequestOptions}
      */
-    constructor ({options}) {
+    constructor () {}
 
-        /**
-         *
-         * @member {PortalRequestOptions}
-         * @protected
-         */
-        this._options = options;
+    /**
+     *
+     * @param options {RouteHandlerOptions}
+     * @param request {HttpRequestObject}
+     * @param response {HttpResponseObject}
+     * @returns {Promise}
+     * @fixme Maybe rename as onRequest ?
+     */
+    run (options, request, response) {
+
+        console.log(LogUtils.getLine(`Calling request "${options.method} ${options.path}" from "${options}"...`));
+
+        return this._run(options, request, response);
 
     }
 
     /**
      *
-     * @param request {HttpRequestObject}
-     * @param response {HttpResponseObject}
-     * @returns {Promise}
+     * @param request
+     * @param socket
+     * @param head
+     * @fixme Check for better error message
      */
-    run (request, response) {
+    onUpgrade (request, socket, head) {
 
-        console.log(LogUtils.getLine(`Calling request "${this._options.method} ${this._options.path}" from "${this._options}"...`));
-
-        return this._run(this._options, request, response);
+        throw new TypeError(`Upgrade Not Supported`);
 
     }
 
     // noinspection JSMethodCanBeStatic
     /**
      *
-     * @param options {PortalRequestOptions}
+     * @param options {RouteHandlerOptions}
      * @param callback {Function}
      * @returns {HttpClientRequestObject}
      * @protected
@@ -110,9 +115,9 @@ class PortalRequest {
 
     /**
      *
+     * @param options {RouteHandlerOptions}
      * @param request {HttpRequestObject}
      * @param response {HttpResponseObject}
-     * @param options {PortalRequestOptions}
      * @returns {Promise}
      * @protected
      */
@@ -147,4 +152,4 @@ class PortalRequest {
 }
 
 // Exports
-module.exports = PortalRequest;
+module.exports = RouteHandler;

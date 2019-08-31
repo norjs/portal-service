@@ -1,8 +1,8 @@
 
 /**
- * This is the object which will be provided to the NodeJS HTTP request function.
+ *
  */
-class PortalRequestOptions {
+class RouteHandlerOptions {
 
     /**
      *
@@ -119,6 +119,7 @@ class PortalRequestOptions {
         this._host = value;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      *
      * @returns {boolean}
@@ -140,19 +141,35 @@ class PortalRequestOptions {
      * @returns {string}
      */
     toString () {
-        return PortalRequestOptions.getLabel(this);
+        return RouteHandlerOptions.getLabel(this);
     }
 
     /**
      *
-     * @param options {PortalRequestOptions}
+     * @param options {RouteHandlerOptions}
      * @returns {string}
      */
     static getLabel (options) {
         return options.socketPath ? `socket://${options.socketPath}` : `http://${options.host}:${options.port}`;
     }
 
+    /**
+     * Return NodeJS http request compatible options object.
+     *
+     * @param options {RouteHandlerOptions}
+     * @returns {{path: string, socketPath: string, method: string, port: number, host: string}}
+     */
+    static getHttpOptions (options) {
+        return {
+            method: options.method,
+            path: options.path,
+            socketPath: options.socketPath,
+            port: options.port,
+            host: options.host
+        };
+    }
+
 }
 
 // Exports
-module.exports = PortalRequestOptions;
+module.exports = RouteHandlerOptions;

@@ -10,6 +10,12 @@ const TypeUtils = require("@norjs/utils/Type");
 
 /**
  *
+ * @type {typeof PromiseUtils}
+ */
+const PromiseUtils = require('@norjs/utils/Promise');
+
+/**
+ *
  * @type {typeof LogicUtils}
  */
 const LogicUtils = require('@norjs/utils/Logic');
@@ -22,6 +28,12 @@ const HttpUtils = require('@norjs/utils/Http');
 
 /**
  *
+ * @type {typeof PtthUtils}
+ */
+const PtthUtils = require('@norjs/utils/Ptth');
+
+/**
+ *
  * @type {typeof StringUtils}
  */
 const StringUtils = require('@norjs/utils/String');
@@ -31,6 +43,12 @@ const StringUtils = require('@norjs/utils/String');
  * @type {typeof ProcessUtils}
  */
 const ProcessUtils = require('@norjs/utils/Process');
+
+/**
+ *
+ * @type {typeof PtthServer}
+ */
+const PtthServer = require('../ptth/PtthServer.js');
 
 /**
  *
@@ -120,9 +138,14 @@ LogicUtils.tryCatch( () => {
                 throw new TypeError(`You may not have both 'route.socket' and 'route.target' properties specified!`);
             }
 
-            if ( HttpUtils.isProto(routeConfig.target, "portal") ) {
-                routeOptions.type = NorPortalRouteType.PORTAL;
-                routeOptions.portal = HttpUtils.getProtoValue(routeConfig.target, "portal");
+            if (routeConfig.type === "ptth") {
+
+                routeOptions.type = NorPortalRouteType.PTTH;
+
+                routeOptions.ptthServer = new PtthServer({
+                    http: this._http
+                });
+
             } else if (routeConfig.socket) {
                 routeOptions.type = NorPortalRouteType.SOCKET;
                 routeOptions.socket = routeConfig.socket;
@@ -222,6 +245,24 @@ LogicUtils.tryCatch( () => {
         HTTP,
         (req, res) => service.onRequest(req, res)
     );
+
+    server.on('upgrade', (request, socket, head) => {
+
+        const handleError = err => PtthUtils.handleError(request, socket, head, err);
+
+        LogicUtils.tryCatch( () => {
+
+            const result = service.onUpgrade(request, socket, head);
+
+            if (PromiseUtils.isPromise(result)) {
+
+                result.catch(handleError);
+
+            }
+
+        }, handleError);
+
+    } );
 
     // Start listening
     HttpUtils.listen(server, NODE_LISTEN, () => {

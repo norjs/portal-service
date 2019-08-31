@@ -2,6 +2,7 @@
 const TypeUtils = require("@norjs/utils/Type");
 
 require('./NorPortalRouteType.js');
+require('../ptth/PtthServer.js');
 
 /**
  * @typedef {Object} NorPortalRouteObject
@@ -15,6 +16,7 @@ require('./NorPortalRouteType.js');
  * @property {string} [auth] - Which authentication configuration to use
  * @property {NorPortalRouteType} [type] - The type of the route
  * @property {Array.<string>} [ptth] - Array of targets to connect using reverse HTTP
+ * @property {RouteHandler} [routeHandler] - Route handler instance
  */
 TypeUtils.defineType("NorPortalRouteObject", {
     "path": "string|undefined",
@@ -26,5 +28,10 @@ TypeUtils.defineType("NorPortalRouteObject", {
     "targetPath": "string|undefined",
     "auth": "string|undefined",
     "type": "NorPortalRouteType|undefined",
-    "ptth": "Array.<string>|undefined"
+    "ptth": "Array.<string>|undefined",
+
+    // FIXME: Fix routeHandler TypeUtils definition
+    "routeHandler": "Object|undefined"
+
 });
+

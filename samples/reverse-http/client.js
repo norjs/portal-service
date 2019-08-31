@@ -13,12 +13,14 @@ const HOSTNAME = process.env.HOSTNAME || '127.0.0.1';
 
 const PORT = process.env.PORT || 8080;
 
+const PATH = process.env.URL_PATH || '/';
+
 const http = require('http');
 
 const options = {
     host: HOSTNAME,
     port: PORT,
-    path: '/',
+    path: PATH,
     headers: {
         'Connection': 'Upgrade',
         'Upgrade': 'PTTH/1.0'
