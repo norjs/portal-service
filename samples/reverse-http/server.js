@@ -1,6 +1,8 @@
 /**
  * This is a sample HTTP server which listens for remote connection upgrade requests and upgrades the incoming connection
  * as a HTTP client which can then make requests on the remote HTTP server running at the client side.
+ *
+ * @see https://tools.ietf.org/html/draft-lentczner-rhttp-00
  */
 
 /**

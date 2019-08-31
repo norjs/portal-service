@@ -1,6 +1,8 @@
 /**
  * This is a sample HTTP client which connect to a remote server and upgrades the connection as a HTTP server, so then
  * the remote server turns into a HTTP client and can make requests on the client side HTTP server.
+ *
+ * @see https://tools.ietf.org/html/draft-lentczner-rhttp-00
  */
 
 /**
