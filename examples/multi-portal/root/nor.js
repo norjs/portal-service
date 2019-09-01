@@ -1,5 +1,6 @@
 const PATH = require('path');
 const ROOT = __dirname;
+const PORTAL_LISTEN = process.env.PORTAL_LISTEN || PATH.join(ROOT, "./portal-service.socket");
 
 module.exports = {
   "services": {
@@ -9,19 +10,14 @@ module.exports = {
       "production": true,
       "autoStart": true,
       "env": {
-        "NODE_LISTEN": PATH.join(ROOT, "./portal-service.socket"),
+        "NODE_LISTEN": PORTAL_LISTEN,
         "NOR_PORTAL_CONFIG": PATH.join(ROOT, "./nor.js")
       }
     }
   },
-  "portals": {
-    "db": {
-      "connect": "http://localhost:3000"
-    }
-  },
   "routes": {
-    "/api": {
-      "target": "portal://db/api"
+    "/db": {
+      "type": "ptth"
     }
   }
 };

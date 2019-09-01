@@ -13,9 +13,9 @@ const LogicUtils = require("@norjs/utils/src/LogicUtils");
 
 /**
  *
- * @type {typeof PortalRequestOptions}
+ * @type {typeof RouteHandlerOptions}
  */
-const PortalRequestOptions = require('./PortalRequestOptions.js');
+const RouteHandlerOptions = require('./RouteHandlerOptions.js');
 
 /**
  *
@@ -26,43 +26,52 @@ const HttpUtils = require("@norjs/utils/src/HttpUtils");
 /**
  * @abstract
  */
-class PortalRequest {
+class RouteHandler {
 
     /**
      *
+     */
+    constructor () {}
+
+    /**
+     *
+     */
+    destroy () {}
+
+    /**
+     *
+     * @param options {RouteHandlerOptions}
      * @param request {HttpRequestObject}
      * @param response {HttpResponseObject}
-     * @param options {PortalRequestOptions}
+     * @returns {Promise}
+     * @fixme Maybe rename as onRequest ?
      */
-    constructor ({request, response, options}) {
+    run (options, request, response) {
 
-        /**
-         *
-         * @member {HttpRequestObject}
-         * @protected
-         */
-        this._request = request;
+        console.log(LogUtils.getLine(`Calling request "${options.method} ${options.path}" from "${options}"...`));
 
-        /**
-         *
-         * @member {HttpResponseObject}
-         * @protected
-         */
-        this._response = response;
+        return this._run(options, request, response);
 
-        /**
-         *
-         * @member {PortalRequestOptions}
-         * @protected
-         */
-        this._options = options;
+    }
+
+    /**
+     *
+     * @param request
+     * @param socket
+     * @param head
+     * @returns {boolean} If `true`, upgrade finished correctly
+     * @fixme Check for better error message
+     */
+    onUpgrade (request, socket, head) {
+
+        throw new TypeError(`Upgrade Not Supported`);
 
     }
 
     // noinspection JSMethodCanBeStatic
     /**
      *
-     * @param options {PortalRequestOptions}
+     * @param options {RouteHandlerOptions}
      * @param callback {Function}
      * @returns {HttpClientRequestObject}
      * @protected
@@ -75,12 +84,13 @@ class PortalRequest {
     /**
      *
      * @param clientRes {HttpClientResponseObject}
+     * @param response {HttpResponseObject}
      * @returns {Promise}
      * @protected
      */
-    _handleResponse (clientRes) {
+    _handleResponse (clientRes, response) {
 
-        console.log(LogUtils.getLine('Got response. Parsing.'));
+        //console.log(LogUtils.getLine('Got response. Parsing.'));
 
         /**
          * @type {number}
@@ -93,13 +103,13 @@ class PortalRequest {
          */
         const isSuccess = statusCode >= 200 && statusCode < 400;
 
-        this._response.statusCode = statusCode;
+        response.statusCode = statusCode;
 
-        return HttpUtils.proxyDataTo(clientRes, this._response).then(() => {
+        return HttpUtils.proxyDataTo(clientRes, response).then(() => {
 
-            this._response.end();
+            response.end();
 
-            console.log(LogUtils.getLine(`Response ended.`));
+            //console.log(LogUtils.getLine(`Response ended.`));
 
             if (!isSuccess) {
                 throw new HttpUtils.HttpError(statusCode);
@@ -111,11 +121,13 @@ class PortalRequest {
 
     /**
      *
-     * @param options {PortalRequestOptions}
+     * @param options {RouteHandlerOptions}
+     * @param request {HttpRequestObject}
+     * @param response {HttpResponseObject}
      * @returns {Promise}
      * @protected
      */
-    _run (options) {
+    _run (options, request, response) {
 
         return new Promise((resolve, reject) => {
             LogicUtils.tryCatch( () => {
@@ -126,13 +138,13 @@ class PortalRequest {
                  */
                 const clientReq = this._startRequest(options, (clientRes) => {
                     LogicUtils.tryCatch( () => {
-                        resolve(this._handleResponse(clientRes));
+                        resolve(this._handleResponse(clientRes, response));
                     }, reject);
                 });
 
                 clientReq.on('error', reject);
 
-                HttpUtils.proxyDataTo(this._request, clientReq).then(() => {
+                HttpUtils.proxyDataTo(request, clientReq).then(() => {
                     clientReq.end();
                 }).catch( err => {
                     reject(err);
@@ -143,19 +155,7 @@ class PortalRequest {
 
     }
 
-    /**
-     *
-     * @returns {Promise}
-     */
-    run () {
-
-        console.log(LogUtils.getLine(`Calling request "${this._options.method} ${this._options.path}" from "${this._options}"...`));
-
-        return this._run(this._options);
-
-    }
-
 }
 
 // Exports
-module.exports = PortalRequest;
+module.exports = RouteHandler;
