@@ -27,7 +27,7 @@ module.exports = {
   },
   "routes": {
     "/db": {
-      "ptth": "http://localhost:3000/db",
+      "ptth": "http://localhost:3000/db/",
       "socket": PATH.join(ROOT, "./database-service.socket"),
       "development": true,
       "production": true

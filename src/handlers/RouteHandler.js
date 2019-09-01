@@ -35,6 +35,11 @@ class RouteHandler {
 
     /**
      *
+     */
+    destroy () {}
+
+    /**
+     *
      * @param options {RouteHandlerOptions}
      * @param request {HttpRequestObject}
      * @param response {HttpResponseObject}
@@ -54,6 +59,7 @@ class RouteHandler {
      * @param request
      * @param socket
      * @param head
+     * @returns {boolean} If `true`, upgrade finished correctly
      * @fixme Check for better error message
      */
     onUpgrade (request, socket, head) {
@@ -84,7 +90,7 @@ class RouteHandler {
      */
     _handleResponse (clientRes, response) {
 
-        console.log(LogUtils.getLine('Got response. Parsing.'));
+        //console.log(LogUtils.getLine('Got response. Parsing.'));
 
         /**
          * @type {number}
@@ -103,7 +109,7 @@ class RouteHandler {
 
             response.end();
 
-            console.log(LogUtils.getLine(`Response ended.`));
+            //console.log(LogUtils.getLine(`Response ended.`));
 
             if (!isSuccess) {
                 throw new HttpUtils.HttpError(statusCode);

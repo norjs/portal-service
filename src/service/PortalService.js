@@ -32,6 +32,12 @@ const HttpUtils = require('@norjs/utils/Http');
 
 /**
  *
+ * @type {typeof PtthUtils}
+ */
+const PtthUtils = require('@norjs/utils/Ptth');
+
+/**
+ *
  * @type {typeof RouteHandlerOptions}
  */
 const RouteHandlerOptions = require('../handlers/RouteHandlerOptions.js');
@@ -360,15 +366,14 @@ class PortalService {
         const routeConfig = this._findRouteConfig(requestContext.url);
 
         if (!routeConfig) {
-            console.log(`WOOT: No route configuration found for "${requestContext}"`);
             throw new HttpUtils.HttpError(404, `Not Found: "${requestContext.url}"`);
         }
 
-        console.log(`WOOT: Authenticating...`);
+        console.log(LogUtils.getLine(`"${ requestContext }": Authenticating...`));
 
         return this._authenticate(requestContext, routeConfig).then(() => {
 
-            console.log(`WOOT: Authenticated successfully`);
+            console.log(LogUtils.getLine(`"${ requestContext }": Authenticated successfully`));
 
             /**
              *
@@ -388,6 +393,13 @@ class PortalService {
 
     }
 
+    /**
+     *
+     * @param request
+     * @param socket
+     * @param head
+     * @returns {Promise<boolean>} If `true`, upgrade finished correctly.
+     */
     onUpgrade (request, socket, head) {
 
         /**
@@ -405,15 +417,10 @@ class PortalService {
         const routeConfig = this._findRouteConfig(requestContext.url);
 
         if (!routeConfig) {
-            console.log(`WOOT: No route configuration found for "${requestContext}"`);
             throw new HttpUtils.HttpError(404, `Not Found: "${requestContext.url}"`);
         }
 
-        console.log(`WOOT: Authenticating...`);
-
         return this._authenticate(requestContext, routeConfig).then(() => {
-
-            console.log(`WOOT: Authenticated successfully`);
 
             const options = PortalService.parseRouteHandlerOptions({
                 method: requestContext.method,
@@ -424,6 +431,7 @@ class PortalService {
             const routeHandler = this._getRouteHandler(options, routeConfig);
 
             return routeHandler.onUpgrade(request, socket, head);
+
         });
 
 

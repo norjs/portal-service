@@ -1,4 +1,3 @@
-const _ = require('lodash');
 
 /**
  *
@@ -36,6 +35,16 @@ class PtthRouteHandler extends RouteHandler {
 
     /**
      *
+     */
+    destroy () {
+
+        this._http = undefined;
+        this._socket = undefined;
+
+    }
+
+    /**
+     *
      * @param options {RouteHandlerOptions}
      * @param callback {Function}
      * @returns {HttpClientRequestObject}
@@ -49,7 +58,7 @@ class PtthRouteHandler extends RouteHandler {
             throw new HttpUtils.HttpError(503);
         }
 
-        console.log(`WOOT: PtthRouteHandler._startRequest() with options = `, options);
+        console.log(LogUtils.getLine(`Requesting through a socket with options = `), options);
 
         return PtthUtils.request(this._http, this._socket, RouteHandlerOptions.getHttpOptions(options), callback);
 
@@ -82,22 +91,27 @@ class PtthRouteHandler extends RouteHandler {
      * @param request
      * @param socket
      * @param head
+     * @returns {boolean} If `true`, upgrade finished correctly.
      */
     onUpgrade (request, socket, head) {
 
         if (this._socket) {
 
-            return PtthUtils.onSocketAlreadyCreatedError(request, socket, head);
+            PtthUtils.onSocketAlreadyCreatedError(request, socket, head);
 
+            return false;
         }
 
         if (PtthUtils.onServerUpgrade(request, socket, head)) {
 
             this._socket = socket;
 
-            console.log(LogUtils.getLine(`Remote server connected through HTTP upgrade`));
+            console.log(LogUtils.getLine(`"${request.method} ${request.url}": Remote server connected through HTTP upgrade`));
 
+            return true;
         }
+
+        return false;
 
     }
 

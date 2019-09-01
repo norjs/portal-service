@@ -34,6 +34,15 @@ class HttpRouteHandler extends RouteHandler {
 
     /**
      *
+     */
+    destroy () {
+
+        this._http = undefined;
+
+    }
+
+    /**
+     *
      * @param options {RouteHandlerOptions}
      * @param callback {Function}
      * @returns {HttpClientRequestObject}
@@ -42,13 +51,15 @@ class HttpRouteHandler extends RouteHandler {
      */
     _startRequest (options, callback) {
 
+        console.log(LogUtils.getLine(`Requesting through a HTTP with options = `), options);
+
         return this._http.request( RouteHandlerOptions.getHttpOptions(options) , callback);
 
     }
 
     /**
      *
-     * @param options {PortalRequestOptions}
+     * @param options {RouteHandlerOptions}
      * @param request {HttpRequestObject}
      * @param response {HttpResponseObject}
      * @returns {Promise}

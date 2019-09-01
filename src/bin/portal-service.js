@@ -34,6 +34,12 @@ const PtthUtils = require('@norjs/utils/Ptth');
 
 /**
  *
+ * @type {typeof LogUtils}
+ */
+const LogUtils = require('@norjs/utils/Log');
+
+/**
+ *
  * @type {typeof StringUtils}
  */
 const StringUtils = require('@norjs/utils/String');
@@ -138,30 +144,48 @@ LogicUtils.tryCatch( () => {
                 throw new TypeError(`You may not have both 'route.socket' and 'route.target' properties specified!`);
             }
 
+            if (_.has(routeConfig, "ptth")) {
+
+                if (_.isArray(routeConfig.ptth)) {
+                    routeOptions.ptth = routeConfig.ptth;
+                } else if (_.isString(routeConfig.ptth)) {
+                    routeOptions.ptth = [routeConfig.ptth];
+                } else {
+                    throw new TypeError(`Illegal value for "ptth" property in a route: ${routeConfig.ptth}`);
+                }
+
+            }
+
             if (routeConfig.type === "ptth") {
 
                 routeOptions.type = NorPortalRouteType.PTTH;
 
-                routeOptions.ptthServer = new PtthServer({
-                    http: this._http
-                });
-
             } else if (routeConfig.socket) {
+
                 routeOptions.type = NorPortalRouteType.SOCKET;
                 routeOptions.socket = routeConfig.socket;
+
             } else if ( HttpUtils.isSocket(routeConfig.target) ) {
+
                 routeOptions.type = NorPortalRouteType.SOCKET;
                 routeOptions.socket = HttpUtils.getSocket(routeConfig.target);
+
             } else if ( HttpUtils.isPort(routeConfig.target) ) {
+
                 routeOptions.type = NorPortalRouteType.HTTP;
                 routeOptions.targetHost = "localhost";
                 routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
+
             } else if ( HttpUtils.isHostPort(routeConfig.target) ) {
+
                 routeOptions.type = NorPortalRouteType.HTTP;
                 routeOptions.targetHost = HttpUtils.getHost(routeConfig.target);
                 routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
+
             } else {
+
                 throw new TypeError(`No proxy target detected for "${key}"`);
+
             }
 
             routes[key] = routeOptions;
@@ -246,6 +270,84 @@ LogicUtils.tryCatch( () => {
         (req, res) => service.onRequest(req, res)
     );
 
+    server.on('error', err => {
+
+        console.error(LogUtils.getLine(`ERROR: "${err}"`));
+
+    });
+
+    _.each(routes,
+    /**
+      *
+      * @param routeConfig {NorPortalRouteObject}
+      */
+      routeConfig => {
+
+          const routePath = routeConfig.path;
+
+        // Setup a server instance for only this route
+        routeConfig.server = HttpUtils.createJsonServer(
+            HTTP,
+            (request, response) => {
+
+                console.log(LogUtils.getLine(`Server "${routePath}": Request "${request.method} ${request.url}" started`));
+
+                const path = routePath;
+
+                request.url = `${ path[path.length - 1] === '/' ? path.substr(0, path.length - 1) : path }${ request.url }`;
+
+                return service.onRequest(request, response);
+            }
+        );
+
+        routeConfig.server.on('error', err => {
+
+            console.error(LogUtils.getLine(`ERROR: Server "${routePath}": "${err}"`));
+
+        });
+
+        // Connect to remote PTTH end points
+        if (routeConfig.ptth && routeConfig.ptth.length >= 1) {
+
+            const routeServer = routeConfig.server;
+
+            _.each( routeConfig.ptth, ptth => {
+
+                console.log(LogUtils.getLine(`${PortalService.getAppName()} connecting to "${ptth}"...`));
+
+                const handleError = err => {
+
+                    console.error(`ERROR: Failed to connect: "${ptth}": "${err}"`);
+
+                    if (err.stack) {
+                        console.error(err.stack);
+                    }
+
+                };
+
+                LogicUtils.tryCatch( () => {
+
+                    PtthUtils.connect(HTTP, ptth, (response, socket) => {
+                        LogicUtils.tryCatch( () => {
+
+                            // noinspection JSUnresolvedFunction
+                            socket.setKeepAlive(true);
+
+                            PtthUtils.connectSocketToServer(routeServer, socket);
+
+                            console.log(LogUtils.getLine(`${PortalService.getAppName()} connected to "${ptth}"`));
+
+                        }, handleError);
+                    }).catch(handleError);
+
+                }, handleError);
+
+            });
+
+        }
+
+    });
+
     server.on('upgrade', (request, socket, head) => {
 
         const handleError = err => PtthUtils.handleError(request, socket, head, err);
@@ -272,9 +374,32 @@ LogicUtils.tryCatch( () => {
     // Setup automatic destroy on when process ends
     ProcessUtils.setupDestroy(() => {
 
-        LogicUtils.tryCatch( () => service.destroy(), err => ProcessUtils.handleError(err) );
+        // Shutdown sub servers
+        _.each(routes,
+            /**
+             *
+             * @param routeConfig {NorPortalRouteObject}
+             */
+            routeConfig => {
+
+                if (!routeConfig) return;
+
+                if (routeConfig.server) {
+                    LogicUtils.tryCatch( () => routeConfig.server.close(), err => ProcessUtils.handleError(err) );
+                    routeConfig.server = undefined;
+                }
+
+                if (routeConfig.routeHandler) {
+                    LogicUtils.tryCatch( () => routeConfig.routeHandler.destroy(), err => ProcessUtils.handleError(err) );
+                    routeConfig.routeHandler = undefined;
+                }
+
+            }
+        );
 
         LogicUtils.tryCatch( () => server.close(), err => ProcessUtils.handleError(err) );
+
+        LogicUtils.tryCatch( () => service.destroy(), err => ProcessUtils.handleError(err) );
 
     });
 

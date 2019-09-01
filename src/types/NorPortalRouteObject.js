@@ -17,6 +17,7 @@ require('../ptth/PtthServer.js');
  * @property {NorPortalRouteType} [type] - The type of the route
  * @property {Array.<string>} [ptth] - Array of targets to connect using reverse HTTP
  * @property {RouteHandler} [routeHandler] - Route handler instance
+ * @property {Object} [server] - Server instance for this route only
  */
 TypeUtils.defineType("NorPortalRouteObject", {
     "path": "string|undefined",
@@ -28,6 +29,7 @@ TypeUtils.defineType("NorPortalRouteObject", {
     "targetPath": "string|undefined",
     "auth": "string|undefined",
     "type": "NorPortalRouteType|undefined",
+    "server": "Object|undefined",
     "ptth": "Array.<string>|undefined",
 
     // FIXME: Fix routeHandler TypeUtils definition
