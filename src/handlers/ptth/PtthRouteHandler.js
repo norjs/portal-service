@@ -106,6 +106,26 @@ class PtthRouteHandler extends RouteHandler {
 
             this._socket = socket;
 
+            this._socket.on('end', () => {
+
+                console.log(LogUtils.getLine(`"${request.method} ${request.url}": Remote server connection ended`));
+
+                if (socket === this._socket) {
+                    this._socket = undefined;
+                }
+
+            });
+
+            this._socket.on('close', () => {
+
+                console.log(LogUtils.getLine(`"${request.method} ${request.url}": Remote server disconnected`));
+
+                if (socket === this._socket) {
+                    this._socket = undefined;
+                }
+
+            });
+
             console.log(LogUtils.getLine(`"${request.method} ${request.url}": Remote server connected through HTTP upgrade`));
 
             return true;

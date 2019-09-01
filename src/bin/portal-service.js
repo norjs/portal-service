@@ -52,9 +52,9 @@ const ProcessUtils = require('@norjs/utils/Process');
 
 /**
  *
- * @type {typeof PtthServer}
+ * @type {typeof PortalServiceCommand}
  */
-const PtthServer = require('../ptth/PtthServer.js');
+const PortalServiceCommand = require('./PortalServiceCommand.js');
 
 /**
  *
@@ -277,76 +277,14 @@ LogicUtils.tryCatch( () => {
     });
 
     _.each(routes,
-    /**
-      *
-      * @param routeConfig {NorPortalRouteObject}
-      */
-      routeConfig => {
-
-          const routePath = routeConfig.path;
-
-        // Setup a server instance for only this route
-        routeConfig.server = HttpUtils.createJsonServer(
-            HTTP,
-            (request, response) => {
-
-                console.log(LogUtils.getLine(`Server "${routePath}": Request "${request.method} ${request.url}" started`));
-
-                const path = routePath;
-
-                request.url = `${ path[path.length - 1] === '/' ? path.substr(0, path.length - 1) : path }${ request.url }`;
-
-                return service.onRequest(request, response);
-            }
-        );
-
-        routeConfig.server.on('error', err => {
-
-            console.error(LogUtils.getLine(`ERROR: Server "${routePath}": "${err}"`));
-
-        });
-
-        // Connect to remote PTTH end points
-        if (routeConfig.ptth && routeConfig.ptth.length >= 1) {
-
-            const routeServer = routeConfig.server;
-
-            _.each( routeConfig.ptth, ptth => {
-
-                console.log(LogUtils.getLine(`${PortalService.getAppName()} connecting to "${ptth}"...`));
-
-                const handleError = err => {
-
-                    console.error(`ERROR: Failed to connect: "${ptth}": "${err}"`);
-
-                    if (err.stack) {
-                        console.error(err.stack);
-                    }
-
-                };
-
-                LogicUtils.tryCatch( () => {
-
-                    PtthUtils.connect(HTTP, ptth, (response, socket) => {
-                        LogicUtils.tryCatch( () => {
-
-                            // noinspection JSUnresolvedFunction
-                            socket.setKeepAlive(true);
-
-                            PtthUtils.connectSocketToServer(routeServer, socket);
-
-                            console.log(LogUtils.getLine(`${PortalService.getAppName()} connected to "${ptth}"`));
-
-                        }, handleError);
-                    }).catch(handleError);
-
-                }, handleError);
-
-            });
-
+        /**
+        *
+        * @param routeConfig {NorPortalRouteObject}
+        */
+        routeConfig => {
+            PortalServiceCommand.setupRoute(HTTP, routeConfig, service);
         }
-
-    });
+    );
 
     server.on('upgrade', (request, socket, head) => {
 
