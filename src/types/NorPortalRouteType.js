@@ -11,7 +11,7 @@ const NorPortalRouteType = {
     PTTH: "PTTH"
 };
 
-// FIXME: Implement enum support for TypeUtils.defineType()
+// FIXME: Implement enum support for TypeUtils.defineType(), see https://github.com/norjs/portal-service/issues/18
 TypeUtils.defineType("NorPortalRouteType", "string");
 
 // Exports

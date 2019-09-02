@@ -44,7 +44,7 @@ class RouteHandler {
      * @param request {HttpRequestObject}
      * @param response {HttpResponseObject}
      * @returns {Promise}
-     * @fixme Maybe rename as onRequest ?
+     * @fixme Maybe rename as onRequest ? See https://github.com/norjs/portal-service/issues/15
      */
     run (options, request, response) {
 
@@ -60,7 +60,7 @@ class RouteHandler {
      * @param socket
      * @param head
      * @returns {boolean} If `true`, upgrade finished correctly
-     * @fixme Check for better error message
+     * @fixme Check for better error message. See https://github.com/norjs/portal-service/issues/16
      */
     onUpgrade (request, socket, head) {
 

@@ -493,14 +493,14 @@ class PortalService {
         /**
          *
          * @type {string|undefined}
-         * @fixme implement support
+         * @fixme implement support, see https://github.com/norjs/portal-service/issues/17
          */
         let username = undefined;
 
         /**
          *
          * @type {string|undefined}
-         * @fixme implement support
+         * @fixme implement support, see https://github.com/norjs/portal-service/issues/17
          */
         let password = undefined;
 

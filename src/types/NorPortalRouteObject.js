@@ -2,7 +2,6 @@
 const TypeUtils = require("@norjs/utils/Type");
 
 require('./NorPortalRouteType.js');
-require('../ptth/PtthServer.js');
 
 /**
  * @typedef {Object} NorPortalRouteObject
@@ -19,6 +18,7 @@ require('../ptth/PtthServer.js');
  * @property {RouteHandler} [routeHandler] - Route handler instance
  * @property {Object} [server] - Server instance for this route only
  */
+
 TypeUtils.defineType("NorPortalRouteObject", {
     "path": "string|undefined",
     "service": "string|undefined",
@@ -32,7 +32,7 @@ TypeUtils.defineType("NorPortalRouteObject", {
     "server": "Object|undefined",
     "ptth": "Array.<string>|undefined",
 
-    // FIXME: Fix routeHandler TypeUtils definition
+    // FIXME: Fix routeHandler TypeUtils definition, see https://github.com/norjs/portal-service/issues/18
     "routeHandler": "Object|undefined"
 
 });
