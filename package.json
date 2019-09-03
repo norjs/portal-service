@@ -1,6 +1,6 @@
 {
   "name": "@norjs/portal-service",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "NorJS Portal Service for other microservices",
   "main": "./src/index.js",
   "bin": {
