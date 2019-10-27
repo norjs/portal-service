@@ -1,7 +1,5 @@
-
-const TypeUtils = require("@norjs/utils/Type");
-
-require('./NorPortalRouteType.js');
+import TypeUtils from "@norjs/utils/Type";
+import './NorPortalRouteType.js';
 
 /**
  * @typedef {Object} NorPortalRouteObject

@@ -1,11 +1,10 @@
-
-const TypeUtils = require("@norjs/utils/Type");
+import TypeUtils from "@norjs/utils/Type";
 
 /**
  * @enum {string} NorPortalRouteType
  * @readonly
  */
-const NorPortalRouteType = {
+export const NorPortalRouteType = {
     SOCKET: "SOCKET",
     HTTP: "HTTP",
     PTTH: "PTTH"
@@ -15,4 +14,4 @@ const NorPortalRouteType = {
 TypeUtils.defineType("NorPortalRouteType", "string");
 
 // Exports
-module.exports = NorPortalRouteType;
+export default NorPortalRouteType;

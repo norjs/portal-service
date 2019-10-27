@@ -2,7 +2,7 @@
 /**
  *
  */
-class RouteHandlerOptions {
+export class RouteHandlerOptions {
 
     /**
      *
@@ -172,4 +172,4 @@ class RouteHandlerOptions {
 }
 
 // Exports
-module.exports = RouteHandlerOptions;
+export default RouteHandlerOptions;

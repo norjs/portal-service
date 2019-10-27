@@ -1,32 +1,12 @@
-
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require("@norjs/utils/src/LogUtils");
-
-/**
- *
- * @type {typeof LogicUtils}
- */
-const LogicUtils = require("@norjs/utils/src/LogicUtils");
-
-/**
- *
- * @type {typeof RouteHandlerOptions}
- */
-const RouteHandlerOptions = require('./RouteHandlerOptions.js');
-
-/**
- *
- * @type {typeof HttpUtils}
- */
-const HttpUtils = require("@norjs/utils/src/HttpUtils");
+import LogUtils from "@norjs/utils/src/LogUtils";
+import LogicUtils from "@norjs/utils/src/LogicUtils";
+import RouteHandlerOptions from './RouteHandlerOptions.js';
+import HttpUtils from "@norjs/utils/src/HttpUtils";
 
 /**
  * @abstract
  */
-class RouteHandler {
+export class RouteHandler {
 
     /**
      *
@@ -158,4 +138,4 @@ class RouteHandler {
 }
 
 // Exports
-module.exports = RouteHandler;
+export default RouteHandler;

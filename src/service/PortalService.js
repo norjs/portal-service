@@ -1,69 +1,16 @@
-const _ = require('lodash');
-
-/**
- *
- * @type {typeof TypeUtils}
- */
-const TypeUtils = require("@norjs/utils/Type");
-
-/**
- *
- * @type {typeof LogicUtils}
- */
-const LogicUtils = require('@norjs/utils/Logic');
-
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require('@norjs/utils/Log');
-
-/**
- *
- * @type {typeof PromiseUtils}
- */
-const PromiseUtils = require('@norjs/utils/Promise');
-
-/**
- *
- * @type {typeof HttpUtils}
- */
-const HttpUtils = require('@norjs/utils/Http');
-
-/**
- *
- * @type {typeof PtthUtils}
- */
-const PtthUtils = require('@norjs/utils/Ptth');
-
-/**
- *
- * @type {typeof RouteHandlerOptions}
- */
-const RouteHandlerOptions = require('../handlers/RouteHandlerOptions.js');
-
-/**
- *
- * @type {typeof HttpRouteHandler}
- */
-const HttpRouteHandler = require('../handlers/http/HttpRouteHandler.js');
-
-/**
- *
- * @type {typeof PtthRouteHandler}
- */
-const PtthRouteHandler = require('../handlers/ptth/PtthRouteHandler.js');
-
-/**
- *
- * @type {typeof NorPortalRouteType}
- */
-const NorPortalRouteType = require("../types/NorPortalRouteType");
+import _ from 'lodash';
+import LogUtils from '@norjs/utils/Log';
+import PromiseUtils from '@norjs/utils/Promise';
+import HttpUtils from '@norjs/utils/Http';
+import RouteHandlerOptions from '../handlers/RouteHandlerOptions.js';
+import HttpRouteHandler from '../handlers/http/HttpRouteHandler.js';
+import PtthRouteHandler from '../handlers/ptth/PtthRouteHandler.js';
+import NorPortalRouteType from "../types/NorPortalRouteType";
 
 /**
  * @implements {NorPortalAuthenticator}
  */
-class DefaultAuthenticator {
+export class DefaultAuthenticator {
 
     /**
      *
@@ -89,7 +36,7 @@ class DefaultAuthenticator {
  * @enum {number}
  * @readonly
  */
-const PortalServiceState = {
+export const PortalServiceState = {
 
     UNINITIALIZED: 0,
     INITIALIZED: 1,
@@ -100,7 +47,7 @@ const PortalServiceState = {
 /**
  * This is the primary logic for our HTTP proxy micro service.
  */
-class PortalService {
+export class PortalService {
 
     /**
      * Returns states
@@ -600,8 +547,4 @@ class PortalService {
 
 }
 
-/**
- *
- * @type {typeof PortalService}
- */
-module.exports = PortalService;
+export default PortalService;

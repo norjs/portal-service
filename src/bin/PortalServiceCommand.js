@@ -1,87 +1,20 @@
+import _ from 'lodash';
+import LogicUtils from '@norjs/utils/Logic';
+import HttpUtils from '@norjs/utils/Http';
+import PtthUtils from '@norjs/utils/Ptth';
+import LogUtils from '@norjs/utils/Log';
+import PortalService from '../service/PortalService.js';
 
-/**
- * Time in milliseconds to wait before trying to connect again after a failed attempt.
- *
- * @type {number}
- */
-const PTTH_CONNECTION_ERROR_RECONNECT_TIME = 5000;
-
-/**
- * Time in milliseconds to wait before reconnecting after a connection is disconnected.
- *
- * @type {number}
- */
-const PTTH_CONNECTION_DISCONNECT_RECONNECT_TIME = 500;
-
-/**
- * The default timeout for connections.
- *
- * `0` is disabled.
- *
- * @type {number}
- */
-const DEFAULT_HTTP_SERVER_TIMEOUT = 0;
-
-const _ = require('lodash');
-
-/**
- *
- * @type {typeof TypeUtils}
- */
-const TypeUtils = require("@norjs/utils/Type");
-
-/**
- *
- * @type {typeof PromiseUtils}
- */
-const PromiseUtils = require('@norjs/utils/Promise');
-
-/**
- *
- * @type {typeof LogicUtils}
- */
-const LogicUtils = require('@norjs/utils/Logic');
-
-/**
- *
- * @type {typeof HttpUtils}
- */
-const HttpUtils = require('@norjs/utils/Http');
-
-/**
- *
- * @type {typeof PtthUtils}
- */
-const PtthUtils = require('@norjs/utils/Ptth');
-
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require('@norjs/utils/Log');
-
-/**
- *
- * @type {typeof StringUtils}
- */
-const StringUtils = require('@norjs/utils/String');
-
-/**
- *
- * @type {typeof ProcessUtils}
- */
-const ProcessUtils = require('@norjs/utils/Process');
-
-/**
- *
- * @type {typeof PortalService}
- */
-const PortalService = require('../service/PortalService.js');
+import {
+    DEFAULT_HTTP_SERVER_TIMEOUT,
+    PTTH_CONNECTION_DISCONNECT_RECONNECT_TIME,
+    PTTH_CONNECTION_ERROR_RECONNECT_TIME
+} from "../constants";
 
 /**
  *
  */
-class PortalServiceCommand {
+export class PortalServiceCommand {
 
     /**
      *
@@ -208,4 +141,4 @@ class PortalServiceCommand {
 }
 
 // Exports
-module.exports = PortalServiceCommand;
+export default PortalServiceCommand;

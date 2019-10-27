@@ -1,81 +1,26 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node -r esm
 
-const _ = require('lodash');
-
-/**
- *
- * @type {typeof TypeUtils}
- */
-const TypeUtils = require("@norjs/utils/Type");
-
-/**
- *
- * @type {typeof PromiseUtils}
- */
-const PromiseUtils = require('@norjs/utils/Promise');
-
-/**
- *
- * @type {typeof LogicUtils}
- */
-const LogicUtils = require('@norjs/utils/Logic');
-
-/**
- *
- * @type {typeof HttpUtils}
- */
-const HttpUtils = require('@norjs/utils/Http');
-
-/**
- *
- * @type {typeof PtthUtils}
- */
-const PtthUtils = require('@norjs/utils/Ptth');
-
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require('@norjs/utils/Log');
-
-/**
- *
- * @type {typeof StringUtils}
- */
-const StringUtils = require('@norjs/utils/String');
-
-/**
- *
- * @type {typeof ProcessUtils}
- */
-const ProcessUtils = require('@norjs/utils/Process');
-
-/**
- *
- * @type {typeof PortalServiceCommand}
- */
-const PortalServiceCommand = require('./PortalServiceCommand.js');
-
-/**
- *
- * @type {typeof PortalService}
- */
-const PortalService = require('../service/PortalService.js');
+import _ from 'lodash';
+import TypeUtils from "@norjs/utils/Type";
+import PromiseUtils from '@norjs/utils/Promise';
+import LogicUtils from '@norjs/utils/Logic';
+import HttpUtils from '@norjs/utils/Http';
+import PtthUtils from '@norjs/utils/Ptth';
+import LogUtils from '@norjs/utils/Log';
+import StringUtils from '@norjs/utils/String';
+import ProcessUtils from '@norjs/utils/Process';
+import PortalServiceCommand from './PortalServiceCommand.js';
+import PortalService from '../service/PortalService.js';
+import NorPortalRouteType from "../types/NorPortalRouteType";
+import FS from 'fs';
+import HTTP from 'http';
 
 // Types and interfaces
-require('@norjs/types/NorConfigurationObject.js');
-require('@norjs/types/interfaces/HttpClient.js');
-require('../interfaces/NorPortalAuthenticator.js');
-require('../types/NorPortalContextObject.js');
-require('../types/NorPortalRouteObject.js');
-
-const NorPortalRouteType = require("../types/NorPortalRouteType");
-
-/**
- *
- * @type {FileSystemModule}
- */
-const FS = require('fs');
+import '@norjs/types/NorConfigurationObject.js';
+import '@norjs/types/interfaces/HttpClient.js';
+import '../interfaces/NorPortalAuthenticator.js';
+import '../types/NorPortalContextObject.js';
+import '../types/NorPortalRouteObject.js';
 
 LogicUtils.tryCatch( () => {
 
@@ -107,12 +52,6 @@ LogicUtils.tryCatch( () => {
      */
     const config = ProcessUtils.requireFile(NOR_PORTAL_CONFIG);
     TypeUtils.assert(config, "NorConfigurationObject");
-
-    /**
-     *
-     * @type {HttpServerModule & HttpClientModule}
-     */
-    const HTTP = require('http');
 
     /**
      * Routes by their name

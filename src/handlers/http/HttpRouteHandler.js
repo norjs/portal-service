@@ -1,20 +1,11 @@
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require("@norjs/utils/src/LogUtils");
-
-/**
- *
- * @type {typeof RouteHandler}
- */
-const RouteHandler = require("../RouteHandler.js");
-const RouteHandlerOptions = require("../RouteHandlerOptions");
+import LogUtils from "@norjs/utils/Log";
+import RouteHandler from "../RouteHandler.js";
+import RouteHandlerOptions from "../RouteHandlerOptions";
 
 /**
  * Route handler which uses HTTP to route the request to another location (eg. address or socket file).
  */
-class HttpRouteHandler extends RouteHandler {
+export class HttpRouteHandler extends RouteHandler {
 
     /**
      *
@@ -73,4 +64,4 @@ class HttpRouteHandler extends RouteHandler {
 }
 
 // Exports
-module.exports = HttpRouteHandler;
+export default HttpRouteHandler;

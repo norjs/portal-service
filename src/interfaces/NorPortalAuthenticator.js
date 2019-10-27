@@ -1,18 +1,12 @@
-// Types and interfaces
-require('../types/NorPortalContextObject.js');
-
-/**
- *
- * @type {typeof TypeUtils}
- */
-const TypeUtils = require("@norjs/utils/Type");
+import '../types/NorPortalContextObject.js';
+import TypeUtils from "@norjs/utils/Type";
 
 /**
  * Defines common interface to authenticate requests
  *
  * @interface
  */
-class NorPortalAuthenticator {
+export class NorPortalAuthenticator {
 
     /**
      *
@@ -39,8 +33,5 @@ TypeUtils.defineType(
     }
 );
 
-/**
- *
- * @type {typeof NorPortalAuthenticator}
- */
-module.exports = NorPortalAuthenticator;
+// noinspection JSUnusedGlobalSymbols
+export default NorPortalAuthenticator;

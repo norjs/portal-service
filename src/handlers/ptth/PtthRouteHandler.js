@@ -1,23 +1,13 @@
-
-/**
- *
- * @type {typeof LogUtils}
- */
-const LogUtils = require("@norjs/utils/src/LogUtils");
-
-/**
- *
- * @type {typeof RouteHandler}
- */
-const RouteHandler = require("../RouteHandler.js");
-const RouteHandlerOptions = require("../RouteHandlerOptions");
-const HttpUtils = require("@norjs/utils/src/HttpUtils");
-const PtthUtils = require("@norjs/utils/src/PtthUtils");
+import LogUtils from "@norjs/utils/src/LogUtils";
+import RouteHandler from "../RouteHandler.js";
+import RouteHandlerOptions from "../RouteHandlerOptions";
+import HttpUtils from "@norjs/utils/src/HttpUtils";
+import PtthUtils from "@norjs/utils/src/PtthUtils";
 
 /**
  * Route handler which routes requests to previously established reverse HTTP connection.
  */
-class PtthRouteHandler extends RouteHandler {
+export class PtthRouteHandler extends RouteHandler {
 
     /**
      *
@@ -138,4 +128,4 @@ class PtthRouteHandler extends RouteHandler {
 }
 
 // Exports
-module.exports = PtthRouteHandler;
+export default PtthRouteHandler;
