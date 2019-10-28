@@ -3,6 +3,8 @@ import LogicUtils from "@norjs/utils/src/LogicUtils";
 import RouteHandlerOptions from './RouteHandlerOptions.js';
 import HttpUtils from "@norjs/utils/src/HttpUtils";
 
+const nrLog = LogUtils.getLogger("RouteHandler");
+
 /**
  * @abstract
  */
@@ -28,7 +30,7 @@ export class RouteHandler {
      */
     run (options, request, response) {
 
-        console.log(LogUtils.getLine(`Calling request "${options.method} ${options.path}" from "${options}"...`));
+        nrLog.trace(`Calling request "${options.method} ${options.path}" from "${options}"...`);
 
         return this._run(options, request, response);
 
@@ -70,18 +72,12 @@ export class RouteHandler {
      */
     _handleResponse (clientRes, response) {
 
-        //console.log(LogUtils.getLine('Got response. Parsing.'));
-
         /**
          * @type {number}
          */
-        const statusCode = clientRes.statusCode;
+        const statusCode = clientRes ? clientRes.statusCode : undefined;
 
-        /**
-         *
-         * @type {boolean}
-         */
-        const isSuccess = statusCode >= 200 && statusCode < 400;
+        nrLog.trace(`Got response with status ${statusCode}. Proxying it....`);
 
         response.statusCode = statusCode;
 
@@ -89,11 +85,7 @@ export class RouteHandler {
 
             response.end();
 
-            //console.log(LogUtils.getLine(`Response ended.`));
-
-            if (!isSuccess) {
-                throw new HttpUtils.HttpError(statusCode);
-            }
+            nrLog.trace(`Response ended.`);
 
         });
 

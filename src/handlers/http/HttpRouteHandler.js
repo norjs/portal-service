@@ -2,6 +2,8 @@ import LogUtils from "@norjs/utils/Log";
 import RouteHandler from "../RouteHandler.js";
 import RouteHandlerOptions from "../RouteHandlerOptions";
 
+const nrLog = LogUtils.getLogger("HttpRouteHandler");
+
 /**
  * Route handler which uses HTTP to route the request to another location (eg. address or socket file).
  */
@@ -42,7 +44,9 @@ export class HttpRouteHandler extends RouteHandler {
      */
     _startRequest (options, callback) {
 
-        console.log(LogUtils.getLine(`Requesting through a HTTP with options = `), options);
+        const httpOptions = RouteHandlerOptions.getHttpOptions(options);
+
+        nrLog.trace(`Requesting through a HTTP with httpOptions = `, httpOptions);
 
         return this._http.request( RouteHandlerOptions.getHttpOptions(options) , callback);
 

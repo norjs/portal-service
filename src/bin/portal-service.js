@@ -22,6 +22,8 @@ import '../interfaces/NorPortalAuthenticator.js';
 import '../types/NorPortalContextObject.js';
 import '../types/NorPortalRouteObject.js';
 
+const nrLog = LogUtils.getLogger("portal-service");
+
 LogicUtils.tryCatch( () => {
 
     // noinspection JSUnresolvedVariable
@@ -211,7 +213,7 @@ LogicUtils.tryCatch( () => {
 
     server.on('error', err => {
 
-        console.error(LogUtils.getLine(`ERROR: "${err}"`));
+        nrLog.error(`ERROR: "${err}"`);
 
     });
 

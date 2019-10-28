@@ -11,6 +11,8 @@ import {
     PTTH_CONNECTION_ERROR_RECONNECT_TIME
 } from "../constants";
 
+const nrLog = LogUtils.getLogger("PortalServiceCommand");
+
 /**
  *
  */
@@ -37,7 +39,7 @@ export class PortalServiceCommand {
 
         routeServer.on('error', err => {
 
-            console.error(LogUtils.getLine(`ERROR: Server "${routePath}": "${err}"`));
+            nrLog.error(`ERROR: Server "${routePath}": "${err}"`);
 
         });
 
@@ -67,7 +69,7 @@ export class PortalServiceCommand {
             http,
             (request, response) => {
 
-                console.log(LogUtils.getLine(`Server "${routePath}": Request "${request.method} ${request.url}" started`));
+                nrLog.trace(`Server "${routePath}": Request "${request.method} ${request.url}" started`);
 
                 const path = routePath;
 
@@ -88,14 +90,14 @@ export class PortalServiceCommand {
      */
     static setupPtthEndPoint (http, ptth, routeServer) {
 
-        console.log(LogUtils.getLine(`${PortalService.getAppName()} connecting to "${ptth}"...`));
+        nrLog.trace(`${PortalService.getAppName()} connecting to "${ptth}"...`);
 
         const handleError = err => {
 
-            console.error(`ERROR: Failed to connect: "${ptth}": "${err}"`);
+            nrLog.error(`ERROR: Failed to connect: "${ptth}": "${err}"`);
 
             if (err.stack) {
-                console.error(err.stack);
+                nrLog.error(err.stack);
             }
 
             setTimeout( () => {
@@ -116,12 +118,12 @@ export class PortalServiceCommand {
 
                     PtthUtils.connectSocketToServer(routeServer, socket);
 
-                    console.log(LogUtils.getLine(`${PortalService.getAppName()} connected to "${ptth}"`));
+                    nrLog.trace(`${PortalService.getAppName()} connected to "${ptth}"`);
 
                     // noinspection JSUnresolvedFunction
                     socket.on('close', () => {
 
-                        console.log(LogUtils.getLine(`${PortalService.getAppName()} disconnected from "${ptth}"`));
+                        nrLog.trace(`${PortalService.getAppName()} disconnected from "${ptth}"`);
 
                         setTimeout( () => {
 

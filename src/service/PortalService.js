@@ -7,6 +7,8 @@ import HttpRouteHandler from '../handlers/http/HttpRouteHandler.js';
 import PtthRouteHandler from '../handlers/ptth/PtthRouteHandler.js';
 import NorPortalRouteType from "../types/NorPortalRouteType";
 
+const nrLog = LogUtils.getLogger("PortalService");
+
 /**
  * @implements {NorPortalAuthenticator}
  */
@@ -264,7 +266,7 @@ export class PortalService {
         this._authenticators = undefined;
         this.DEFAULT_AUTHENTICATOR = undefined;
 
-        console.log(LogUtils.getLine(`${PortalService.getAppName()} destroyed`));
+        nrLog.trace(`${PortalService.getAppName()} destroyed`);
 
     }
 
@@ -285,7 +287,7 @@ export class PortalService {
      */
     onListen (port) {
 
-        console.log(LogUtils.getLine(`${PortalService.getAppName()} running at ${port}`));
+        nrLog.trace(`${PortalService.getAppName()} running at ${port}`);
 
     }
 
@@ -304,7 +306,7 @@ export class PortalService {
          */
         const requestContext = this._createRequestContext(request);
 
-        console.log(LogUtils.getLine(`Request "${ requestContext }" started`));
+        nrLog.trace(`Request "${ requestContext }" started`);
 
         /**
          *
@@ -316,11 +318,11 @@ export class PortalService {
             throw new HttpUtils.HttpError(404, `Not Found: "${requestContext.url}"`);
         }
 
-        console.log(LogUtils.getLine(`"${ requestContext }": Authenticating...`));
+        nrLog.trace(`"${ requestContext }": Authenticating...`);
 
         return this._authenticate(requestContext, routeConfig).then(() => {
 
-            console.log(LogUtils.getLine(`"${ requestContext }": Authenticated successfully`));
+            nrLog.trace(`"${ requestContext }": Authenticated successfully`);
 
             /**
              *
@@ -355,7 +357,7 @@ export class PortalService {
          */
         const requestContext = this._createRequestContext(request);
 
-        console.log(LogUtils.getLine(`Upgrade Request "${ requestContext }" started`));
+        nrLog.trace(`Upgrade Request "${ requestContext }" started`);
 
         /**
          *
