@@ -7,7 +7,7 @@
     "nor-portal-service": "./src/bin/portal-service.js"
   },
   "scripts": {
-    "start": "node ./src/bin/portal-service.js",
+    "start": "node -r esm ./src/bin/portal-service.js",
     "test": "mocha test/**/*.spec.js",
     "test-watch": "mocha --watch-extensions js --watch test/**/*.spec.js"
   },
@@ -29,6 +29,7 @@
   "dependencies": {
     "@norjs/types": "^1.0.16",
     "@norjs/utils": "^1.0.16",
+    "esm": "^3.2.25",
     "lodash": "^4.17.15"
   },
   "devDependencies": {

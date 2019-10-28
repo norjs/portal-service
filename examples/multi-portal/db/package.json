@@ -1,0 +1,17 @@
+{
+  "name": "@norjs/example-portal-a",
+  "version": "1.0.0",
+  "description": "Example db configuration for @norjs/portal-service",
+  "main": "index.js",
+  "scripts": {
+    "start": "nor-manager-service",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@norjs/database-service": "^1.0.10",
+    "@norjs/portal-service": "^1.0.10",
+    "@norjs/manager-service": "^1.0.10"
+  }
+}

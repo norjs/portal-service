@@ -1,61 +1,28 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node -r esm
 
-const _ = require('lodash');
-
-/**
- *
- * @type {typeof TypeUtils}
- */
-const TypeUtils = require("@norjs/utils/Type");
-
-/**
- *
- * @type {typeof LogicUtils}
- */
-const LogicUtils = require('@norjs/utils/Logic');
-
-/**
- *
- * @type {typeof HttpUtils}
- */
-const HttpUtils = require('@norjs/utils/Http');
-
-/**
- *
- * @type {typeof StringUtils}
- */
-const StringUtils = require('@norjs/utils/String');
-
-/**
- *
- * @type {typeof ProcessUtils}
- */
-const ProcessUtils = require('@norjs/utils/Process');
-
-/**
- *
- * @type {typeof PortalService}
- */
-const PortalService = require('../service/PortalService.js');
-
-/**
- *
- * @type {QueryStringModule}
- */
-const queryStringModule = require('querystring');
+import _ from 'lodash';
+import TypeUtils from "@norjs/utils/Type";
+import PromiseUtils from '@norjs/utils/Promise';
+import LogicUtils from '@norjs/utils/Logic';
+import HttpUtils from '@norjs/utils/Http';
+import PtthUtils from '@norjs/utils/Ptth';
+import LogUtils from '@norjs/utils/Log';
+import StringUtils from '@norjs/utils/String';
+import ProcessUtils from '@norjs/utils/Process';
+import PortalServiceCommand from './PortalServiceCommand.js';
+import PortalService from '../service/PortalService.js';
+import NorPortalRouteType from "../types/NorPortalRouteType";
+import FS from 'fs';
+import HTTP from 'http';
 
 // Types and interfaces
-require('@norjs/types/NorConfigurationObject.js');
-require('@norjs/types/interfaces/HttpClient.js');
-require('../interfaces/NorPortalAuthenticator.js');
-require('../types/NorPortalContextObject.js');
-require('../types/NorPortalRouteObject.js');
+import '@norjs/types/NorConfigurationObject.js';
+import '@norjs/types/interfaces/HttpClient.js';
+import '../interfaces/NorPortalAuthenticator.js';
+import '../types/NorPortalContextObject.js';
+import '../types/NorPortalRouteObject.js';
 
-/**
- *
- * @type {FileSystemModule}
- */
-const FS = require('fs');
+const nrLog = LogUtils.getLogger("portal-service");
 
 LogicUtils.tryCatch( () => {
 
@@ -89,12 +56,6 @@ LogicUtils.tryCatch( () => {
     TypeUtils.assert(config, "NorConfigurationObject");
 
     /**
-     *
-     * @type {HttpServerModule & HttpClientModule}
-     */
-    const HTTP = require('http');
-
-    /**
      * Routes by their name
      *
      * @type {Object.<string,NorPortalRouteObject>}
@@ -110,36 +71,63 @@ LogicUtils.tryCatch( () => {
              */
             const routeConfig = config.routes[key];
 
+            /**
+             *
+             * @type {NorPortalRouteObject}
+             */
             let routeOptions = {
                 path: key,
-                auth: routeConfig.auth
+                auth: routeConfig.auth,
+                targetPath: "/"
             };
 
             if (routeConfig.socket && routeConfig.target) {
                 throw new TypeError(`You may not have both 'route.socket' and 'route.target' properties specified!`);
             }
 
-            if (routeConfig.socket) {
-                routeOptions.socket = routeConfig.socket;
-            } else if ( HttpUtils.isSocket(routeConfig.target) ) {
-                routeOptions.socket = HttpUtils.getSocket(routeConfig.target);
-            } else if ( HttpUtils.isPort(routeConfig.target) ) {
-                routeOptions.targetHost = "localhost";
-                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
-            } else if ( HttpUtils.isHostPort(routeConfig.target) ) {
-                routeOptions.targetHost = HttpUtils.getHost(routeConfig.target);
-                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
-            } else {
-                throw new TypeError(`No proxy target detected for "${key}"`);
+            if (_.has(routeConfig, "ptth")) {
+
+                if (_.isArray(routeConfig.ptth)) {
+                    routeOptions.ptth = routeConfig.ptth;
+                } else if (_.isString(routeConfig.ptth)) {
+                    routeOptions.ptth = [routeConfig.ptth];
+                } else {
+                    throw new TypeError(`Illegal value for "ptth" property in a route: ${routeConfig.ptth}`);
+                }
+
             }
 
-            // if (routeConfig.socket) {
-            //     routeOptions.client = new SocketHttpClient({
-            //         socket: routeConfig.socket,
-            //         httpModule: HTTP,
-            //         queryStringModule
-            //     });
-            // }
+            if (routeConfig.type === "ptth") {
+
+                routeOptions.type = NorPortalRouteType.PTTH;
+
+            } else if (routeConfig.socket) {
+
+                routeOptions.type = NorPortalRouteType.SOCKET;
+                routeOptions.socket = routeConfig.socket;
+
+            } else if ( HttpUtils.isSocket(routeConfig.target) ) {
+
+                routeOptions.type = NorPortalRouteType.SOCKET;
+                routeOptions.socket = HttpUtils.getSocket(routeConfig.target);
+
+            } else if ( HttpUtils.isPort(routeConfig.target) ) {
+
+                routeOptions.type = NorPortalRouteType.HTTP;
+                routeOptions.targetHost = "localhost";
+                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
+
+            } else if ( HttpUtils.isHostPort(routeConfig.target) ) {
+
+                routeOptions.type = NorPortalRouteType.HTTP;
+                routeOptions.targetHost = HttpUtils.getHost(routeConfig.target);
+                routeOptions.targetPort = HttpUtils.getPort(routeConfig.target);
+
+            } else {
+
+                throw new TypeError(`No proxy target detected for "${key}"`);
+
+            }
 
             routes[key] = routeOptions;
 
@@ -223,6 +211,40 @@ LogicUtils.tryCatch( () => {
         (req, res) => service.onRequest(req, res)
     );
 
+    server.on('error', err => {
+
+        nrLog.error(`ERROR: "${err}"`);
+
+    });
+
+    _.each(routes,
+        /**
+        *
+        * @param routeConfig {NorPortalRouteObject}
+        */
+        routeConfig => {
+            PortalServiceCommand.setupRoute(HTTP, routeConfig, service);
+        }
+    );
+
+    server.on('upgrade', (request, socket, head) => {
+
+        const handleError = err => PtthUtils.handleError(request, socket, head, err);
+
+        LogicUtils.tryCatch( () => {
+
+            const result = service.onUpgrade(request, socket, head);
+
+            if (PromiseUtils.isPromise(result)) {
+
+                result.catch(handleError);
+
+            }
+
+        }, handleError);
+
+    } );
+
     // Start listening
     HttpUtils.listen(server, NODE_LISTEN, () => {
         LogicUtils.tryCatch( () => service.onListen(HttpUtils.getLabel(NODE_LISTEN)), err => ProcessUtils.handleError(err) );
@@ -231,9 +253,32 @@ LogicUtils.tryCatch( () => {
     // Setup automatic destroy on when process ends
     ProcessUtils.setupDestroy(() => {
 
-        LogicUtils.tryCatch( () => service.destroy(), err => ProcessUtils.handleError(err) );
+        // Shutdown sub servers
+        _.each(routes,
+            /**
+             *
+             * @param routeConfig {NorPortalRouteObject}
+             */
+            routeConfig => {
+
+                if (!routeConfig) return;
+
+                if (routeConfig.server) {
+                    LogicUtils.tryCatch( () => routeConfig.server.close(), err => ProcessUtils.handleError(err) );
+                    routeConfig.server = undefined;
+                }
+
+                if (routeConfig.routeHandler) {
+                    LogicUtils.tryCatch( () => routeConfig.routeHandler.destroy(), err => ProcessUtils.handleError(err) );
+                    routeConfig.routeHandler = undefined;
+                }
+
+            }
+        );
 
         LogicUtils.tryCatch( () => server.close(), err => ProcessUtils.handleError(err) );
+
+        LogicUtils.tryCatch( () => service.destroy(), err => ProcessUtils.handleError(err) );
 
     });
 

@@ -1,9 +1,10 @@
-# portal-service
+# @norjs/portal-service
 
-This is a micro service acting as an authorizing gateway between network and local UNIX 
-socket services.
+This is a micro service acting as a HTTP gateway between services.
 
 See also [@norjs/manager-service](https://github.com/norjs/manager-service) which can use the same configuration file and manages service start & stop.
+
+The main use case is to act as an authorizing gateway between TCP/IP network and local file-based socket services.
 
 ### Configuration File
 
@@ -24,7 +25,10 @@ A configuration file `./nor.json` could look like:
     },
     "/database": {
       "socket": "./database.sock",
-      "auth": "default"      
+      "auth": "default"
+    },
+    "/public": {
+      "target": "http://public.example.com/"
     }
   }
 }
