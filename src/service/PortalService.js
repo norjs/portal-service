@@ -79,12 +79,14 @@ export class PortalService {
      *
      * @param url {string}
      * @param method {string}
+     * @param headers {Object<string,string>}
      * @param routeConfig {NorPortalRouteObject}
      * @returns {RouteHandlerOptions}
      */
     static parseRouteHandlerOptions ({
         url,
         method,
+        headers = undefined,
         routeConfig
     }) {
 
@@ -101,7 +103,8 @@ export class PortalService {
 
         let options = new RouteHandlerOptions({
             method,
-            path
+            path,
+            headers
         });
 
         switch (routeConfig.type) {
@@ -300,19 +303,25 @@ export class PortalService {
      */
     onRequest (request, response) {
 
+        nrLog.trace(`request: ${request.method} ${request.url}`);
+
         /**
          *
          * @type {NorPortalContextObject}
          */
         const requestContext = this._createRequestContext(request);
 
-        nrLog.trace(`Request "${ requestContext }" started`);
+        nrLog.trace(`requestContext = `, requestContext);
+
+        nrLog.debug(`Request "${ requestContext }" started`);
 
         /**
          *
          * @type {NorPortalRouteObject}
          */
         const routeConfig = this._findRouteConfig(requestContext.url);
+
+        nrLog.trace(`routeConfig = `, routeConfig);
 
         if (!routeConfig) {
             throw new HttpUtils.HttpError(404, `Not Found: "${requestContext.url}"`);
@@ -322,7 +331,7 @@ export class PortalService {
 
         return this._authenticate(requestContext, routeConfig).then(() => {
 
-            nrLog.trace(`"${ requestContext }": Authenticated successfully`);
+            nrLog.debug(`"${ requestContext }": Authenticated successfully`);
 
             /**
              *
@@ -331,10 +340,15 @@ export class PortalService {
             const options = PortalService.parseRouteHandlerOptions({
                 method: requestContext.method,
                 url: requestContext.url,
+                headers: requestContext.headers,
                 routeConfig
             });
 
+            nrLog.trace(`options = `, options);
+
             const routeHandler = this._getRouteHandler(options, routeConfig);
+
+            nrLog.trace(`routeHandler = `, routeHandler);
 
             return routeHandler.run(options, request, response);
 
@@ -440,6 +454,11 @@ export class PortalService {
         const method = request.method;
 
         /**
+         * @type {Object.<string,string>}
+         */
+        const headers = request.headers;
+
+        /**
          *
          * @type {string|undefined}
          * @fixme implement support, see https://github.com/norjs/portal-service/issues/17
@@ -458,6 +477,7 @@ export class PortalService {
             password,
             method,
             url,
+            headers,
 
             toString () {
                 return `${this.method} ${this.url}`;

@@ -8,8 +8,13 @@ export class RouteHandlerOptions {
      *
      * @param method {string}
      * @param path {string}
+     * @param headers {Object.<string,string>}
      */
-    constructor ({method, path}) {
+    constructor ({
+        method,
+        path,
+        headers = undefined
+    }) {
 
         /**
          *
@@ -24,6 +29,13 @@ export class RouteHandlerOptions {
          * @protected
          */
         this._path = path;
+
+        /**
+         *
+         * @member {Object.<string, string>}
+         * @protected
+         */
+        this._headers = headers;
 
         /**
          *
@@ -69,6 +81,14 @@ export class RouteHandlerOptions {
      */
     get path () {
         return this._path;
+    }
+
+    /**
+     *
+     * @returns {Object.<string, string>}
+     */
+    get headers () {
+        return this._headers;
     }
 
     /**
@@ -163,6 +183,7 @@ export class RouteHandlerOptions {
         return {
             method: options.method,
             path: options.path,
+            headers: options.headers,
             socketPath: options.socketPath,
             port: options.port,
             host: options.host

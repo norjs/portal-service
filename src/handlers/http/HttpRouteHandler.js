@@ -48,7 +48,7 @@ export class HttpRouteHandler extends RouteHandler {
 
         nrLog.trace(`Requesting through a HTTP with httpOptions = `, httpOptions);
 
-        return this._http.request( RouteHandlerOptions.getHttpOptions(options) , callback);
+        return this._http.request( httpOptions , callback);
 
     }
 
