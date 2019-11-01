@@ -58,6 +58,8 @@ export class PortalServiceCommand {
 
     /**
      *
+     * *NOTE!* Make sure you start listening 'error' events.
+     *
      * @param http {HttpServerModule}
      * @param routePath {string}
      * @param service {PortalService}
