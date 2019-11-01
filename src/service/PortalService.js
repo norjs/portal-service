@@ -321,8 +321,6 @@ export class PortalService {
          */
         const routeConfig = this._findRouteConfig(requestContext.url);
 
-        nrLog.trace(`routeConfig = `, routeConfig);
-
         if (!routeConfig) {
             throw new HttpUtils.HttpError(404, `Not Found: "${requestContext.url}"`);
         }
