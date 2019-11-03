@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import LogUtils from "@norjs/utils/src/LogUtils";
 import LogicUtils from "@norjs/utils/src/LogicUtils";
 import RouteHandlerOptions from './RouteHandlerOptions.js';
@@ -78,6 +79,10 @@ export class RouteHandler {
         const statusCode = clientRes ? clientRes.statusCode : undefined;
 
         nrLog.trace(`Got response with status ${statusCode}. Proxying it....`);
+
+        _.forEach(_.keys(clientRes.headers), key => {
+            response.setHeader(key, clientRes.headers[key]);
+        });
 
         response.statusCode = statusCode;
 
