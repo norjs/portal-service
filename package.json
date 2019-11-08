@@ -1,6 +1,6 @@
 {
   "name": "@norjs/portal-service",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "NorJS Portal Service for other microservices",
   "main": "./src/index.js",
   "bin": {
@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/norjs/portal-service#readme",
   "dependencies": {
-    "@norjs/types": "^1.0.16",
-    "@norjs/utils": "^1.0.16",
+    "@norjs/types": "^1.0.17",
+    "@norjs/utils": "^1.0.17",
     "esm": "^3.2.25",
     "lodash": "^4.17.15"
   },
