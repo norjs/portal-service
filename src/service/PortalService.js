@@ -346,7 +346,7 @@ export class PortalService {
 
             const routeHandler = this._getRouteHandler(options, routeConfig);
 
-            nrLog.trace(`routeHandler = `, routeHandler);
+            //nrLog.trace(`routeHandler = `, routeHandler);
 
             return routeHandler.run(options, request, response);
 
