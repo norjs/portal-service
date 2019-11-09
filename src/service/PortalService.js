@@ -290,7 +290,7 @@ export class PortalService {
      */
     onListen (port) {
 
-        nrLog.trace(`${PortalService.getAppName()} running at ${port}`);
+        nrLog.info(`${PortalService.getAppName()} running at ${port}`);
 
     }
 
