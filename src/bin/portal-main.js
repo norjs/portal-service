@@ -12,6 +12,7 @@ import PortalService from '../service/PortalService.js';
 import NorPortalRouteType from "../types/NorPortalRouteType";
 import FS from 'fs';
 import HTTP from 'http';
+import { NR_DEFAULT_HOSTNAME } from "@norjs/utils/Http";
 
 // Types and interfaces
 import '@norjs/types/NorConfigurationObject.js';
@@ -43,7 +44,7 @@ LogicUtils.tryCatch( () => {
      *
      * @type {string}
      */
-    const NODE_LISTEN = process.env.NODE_LISTEN || (NOR_PORTAL_PORT ? `localhost:${NOR_PORTAL_PORT}` : undefined) || './socket.sock';
+    const NODE_LISTEN = process.env.NODE_LISTEN || (NOR_PORTAL_PORT ? `${NR_DEFAULT_HOSTNAME}:${NOR_PORTAL_PORT}` : undefined) || './socket.sock';
 
     // noinspection JSValidateTypes
     /**
